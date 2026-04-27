@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Royal Classico FC — Official Website</title>
+  <meta name="description" content="Official website of Royal Classico Football Club — news, squad, and fixtures. EST. 2026."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+
+<!-- ══ NAVBAR ══════════════════════════════════════════════ -->
+<nav class="navbar">
+  <div class="navbar__inner">
+    <a href="/" class="navbar__brand">
+      <!-- Uses logo.png if present, else falls back to inline SVG crest -->
+      <img th:src="@{/images/logo.svg}" alt="Royal Classico FC Crest" class="navbar__crest"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='block'"/>
+      <svg class="navbar__crest" style="display:none;" viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M100 8L188 38V120C188 172 148 210 100 232C52 210 12 172 12 120V38Z" fill="#001a3a" stroke="#C5A065" stroke-width="4"/>
+        <path d="M100 18L178 44V120C178 166 142 202 100 222C58 202 22 166 22 120V44Z" fill="#003366"/>
+        <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle"
+              fill="#C5A065" font-family="Georgia,serif" font-size="52" font-weight="bold">RC</text>
+      </svg>
+      <span class="navbar__name">Royal Classico</span>
+    </a>
+    <ul class="navbar__links">
+      <li><a href="/" class="active">Home</a></li>
+      <li><a href="/squad">Squad</a></li>
+      <li><a href="/news">News</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ══ HERO SLIDER ═════════════════════════════════════════ -->
+<section class="hero">
+  <div class="slider" id="main-slider">
+
+    <!-- Dynamic slides from DB -->
+    <div th:each="post, iter : ${sliderPosts}" class="slide"
+         th:classappend="${iter.index == 0} ? ' active' : ''">
+      <img th:if="${post.imagePath != null}"
+           th:src="@{/uploads/{p}(p=${post.imagePath})}"
+           th:alt="${post.title}"
+           class="slide__bg"/>
+      <div th:if="${post.imagePath == null}" class="slide__bg"
+           style="background:linear-gradient(135deg,#0A1128 0%,#0f1d3a 50%,#162244 100%);"></div>
+      <div class="slide__overlay"></div>
+      <div class="slide__content container">
+        <span class="slide__tag">Latest News</span>
+        <h1 class="slide__title" th:text="${post.title}">Headline</h1>
+        <p class="slide__date"
+           th:text="${#temporals.format(post.createdAt, 'dd MMMM yyyy')}">Date</p>
+      </div>
+    </div>
+
+    <!-- Fallback if no posts -->
+    <div th:if="${#lists.isEmpty(sliderPosts)}" class="slide active">
+      <div class="slide__bg"
+           style="background:linear-gradient(135deg,#0A1128 0%,#003366 60%,#0f1d3a 100%);"></div>
+      <div class="slide__overlay"></div>
+      <div class="slide__content container">
+        <span class="slide__tag">Welcome</span>
+        <h1 class="slide__title">Royal Classico<br/><span class="gold">Football Club</span></h1>
+        <p class="slide__date">Passion. Unity. Victory. — EST. 2026</p>
+      </div>
+    </div>
+
+    <!-- Slider controls -->
+    <div class="slider__controls">
+      <button th:each="post, iter : ${sliderPosts}"
+              class="slider__dot"
+              th:classappend="${iter.index == 0} ? ' active' : ''">
+      </button>
+    </div>
+
+    <div class="slider__arrows">
+      <button class="slider__arrow" id="slider-prev">&#8592;</button>
+      <button class="slider__arrow" id="slider-next">&#8594;</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FIXTURE BANNER ══════════════════════════════════════ -->
+<div th:if="${nextFixture != null}" class="fixture-banner">
+  <div class="container fixture-banner__inner">
+    <div class="fixture-banner__label">Next Match</div>
+    <div class="fixture-banner__match">
+      <span class="fixture-banner__team">Royal Classico</span>
+      <span class="fixture-banner__vs">VS</span>
+      <span class="fixture-banner__team" th:text="${nextFixture.opponent}">Opponent</span>
+    </div>
+    <div class="fixture-banner__meta">
+      <div class="fixture-meta-item">
+        <span>Date</span>
+        <span th:text="${#temporals.format(nextFixture.matchDate, 'EEE, dd MMM yyyy')}">Date</span>
+      </div>
+      <div class="fixture-meta-item">
+        <span>Kick-off</span>
+        <span th:text="${#temporals.format(nextFixture.matchTime, 'HH:mm')}">Time</span>
+      </div>
+      <div class="fixture-meta-item">
+        <span>Venue</span>
+        <span th:text="${nextFixture.pitch}">Pitch</span>
+      </div>
+    </div>
+    <div id="fixture-countdown"
+         th:attr="data-target=${nextFixture.matchDate + 'T' + nextFixture.matchTime}"
+         style="display:flex;gap:0.75rem;font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--clr-gold);">
+    </div>
+  </div>
+</div>
+
+<!-- ══ LATEST NEWS ══════════════════════════════════════════ -->
+<section style="padding-top:4rem;">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <p class="section-header__eyebrow">From the Club</p>
+        <h2 class="section-header__title">Latest News</h2>
+      </div>
+      <a href="/news" class="section-header__link">View All &rarr;</a>
+    </div>
+
+    <div th:if="${not #lists.isEmpty(latestPosts)}" class="news-grid">
+      <article th:each="post : ${latestPosts}" class="news-card">
+        <div class="news-card__img-wrap">
+          <img th:if="${post.imagePath != null}"
+               th:src="@{/uploads/{p}(p=${post.imagePath})}"
+               th:alt="${post.title}"
+               class="news-card__img"/>
+          <div th:if="${post.imagePath == null}" class="news-card__img-placeholder">⚽</div>
+        </div>
+        <div class="news-card__body">
+          <p class="news-card__date"
+             th:text="${#temporals.format(post.createdAt, 'dd MMM yyyy')}">Date</p>
+          <h3 class="news-card__title" th:text="${post.title}">Title</h3>
+          <p class="news-card__excerpt" th:text="${post.content}">Excerpt</p>
+        </div>
+      </article>
+    </div>
+
+    <div th:if="${#lists.isEmpty(latestPosts)}" class="empty-state">
+      <div class="empty-state__icon">📋</div>
+      <p class="empty-state__text">No news yet. Check back soon!</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══════════════════════════════════════════════ -->
+<footer>
+  <div class="container footer__inner">
+    <div class="footer__brand">Royal Classico FC</div>
+    <p class="footer__est">Est. 2026 &mdash; Amateur Football Club</p>
+    <nav class="footer__links">
+      <a href="/">Home</a>
+      <a href="/squad">Squad</a>
+      <a href="/news">News</a>
+    </nav>
+    <div class="footer__divider"></div>
+    <p class="footer__copy">
+      &copy; 2026 Royal Classico Football Club. All rights reserved.
+    </p>
+  </div>
+</footer>
+
+<script th:src="@{/js/main.js}"></script>
+<script th:src="@{/js/admin.js}"></script>
+</body>
+</html>
