@@ -1,0 +1,386 @@
+<!doctype html>
+</html>
+</body>
+</script>
+  })();
+    loadNews();
+    loadPlayers();
+  (function init(){
+  // Init
+
+  function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;" })[c]); }
+  // Escape helper
+
+  }
+    }
+      console.error('loadNews', err);
+    } catch (err) {
+      });
+        });
+          }
+            alert('Error deleting news');
+            console.error(err);
+          } catch (err) {
+            else { console.error('delete news failed', await res.text()); alert('Delete failed'); }
+            if (res.ok) loadNews();
+            });
+              headers: adminHeader()
+              method: 'DELETE',
+            const res = await fetch(API_BASE + '/news/' + encodeURIComponent(id), {
+          try {
+          if (!confirm('Delete news?')) return;
+          const id = btn.dataset.id;
+        btn.addEventListener('click', async () => {
+      document.querySelectorAll('.delete-news').forEach(btn => {
+      });
+        list.appendChild(div);
+        `;
+          </div>
+            <button data-id="${n.id}" class="delete-news">Delete</button>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+          </div>
+            <div style="font-size:13px;color:#444;margin-top:6px;">${escapeHtml(n.content)}</div>
+            <div style="font-weight:600;">${escapeHtml(n.headline)}</div>
+          <div style="flex:1;">
+          <img class="news-thumb" src="${n.imageUrl || '/assets/default-news.jpg'}" />
+        div.innerHTML = `
+        div.className = 'news-item';
+        const div = document.createElement('div');
+      items.forEach(n => {
+      const items = await res.json();
+      if (!res.ok) return;
+      const res = await fetch(API_BASE + '/news', { headers: adminHeader() });
+    try {
+    list.innerHTML = '';
+    const list = document.getElementById('newsList');
+  async function loadNews() {
+
+  });
+    }
+      alert('Error saving news');
+      console.error(err);
+    } catch (err) {
+      }
+        alert('Save failed');
+        console.error('save news failed', await res.text());
+      } else {
+        newsModal.classList.remove('open');
+        await loadNews();
+      if (res.ok) {
+      });
+        body: form
+        headers: adminHeader(),
+        method: 'POST',
+      const res = await fetch(API_BASE + '/news', {
+    try {
+
+    if (file) form.append('image', file);
+    form.append('content', content);
+    form.append('headline', headline);
+    const form = new FormData();
+
+    if (!headline || !content) { alert('Headline and content required'); return; }
+
+    const file = newsPhoto.files[0];
+    const content = document.getElementById('newsContent').value.trim();
+    const headline = document.getElementById('newsHeadline').value.trim();
+  document.getElementById('newsSave').addEventListener('click', async function(){
+
+  });
+    reader.readAsDataURL(file);
+    reader.onload = function(e) { newsPreview.src = e.target.result; }
+    const reader = new FileReader();
+    if (!file) return;
+    const file = ev.target.files[0];
+  newsPhoto.addEventListener('change', function(ev){
+
+  document.getElementById('newsCancel').addEventListener('click', () => { newsModal.classList.remove('open'); newsModal.setAttribute('aria-hidden','true'); });
+  document.getElementById('btnOpenNews').addEventListener('click', () => { newsModal.classList.add('open'); newsModal.setAttribute('aria-hidden','false'); });
+  const newsPreview = document.getElementById('newsPreview');
+  const newsPhoto = document.getElementById('newsPhoto');
+  const newsModal = document.getElementById('newsModal');
+  // News UI
+
+  }
+    }
+      });
+        });
+          }
+            alert('Error deleting');
+            console.error(err);
+          } catch (err) {
+            }
+              alert('Delete failed');
+              console.error('delete player failed', await res.text());
+            } else {
+              await loadPlayers();
+            if (res.ok) {
+            });
+              headers: adminHeader()
+              method: 'DELETE',
+            const res = await fetch(API_BASE + '/players/' + encodeURIComponent(id), {
+          try {
+          if (!confirm('Delete this player?')) return;
+          const id = btn.dataset.id;
+        btn.addEventListener('click', async (ev) => {
+      document.querySelectorAll('.delete-player').forEach(btn => {
+      // wire delete handlers
+      appendAddCard();
+    } finally {
+      console.error('loadPlayers', err);
+    } catch (err) {
+      });
+        playersGrid.appendChild(d);
+        `;
+          </div>
+            <button onclick="location.href='/player/${p.id}'">View</button>
+            <button data-id="${p.id}" class="delete-player">Delete</button>
+          <div class="controls">
+          <div style="margin-top:8px;font-size:12px;color:#555;">${(p.positions||[]).join(', ')}</div>
+          <div style="font-size:13px;color:#666;">${escapeHtml(p.jerseyName)} • #${p.number} • ${p.age}</div>
+          <div><strong>${escapeHtml(p.name)}</strong></div>
+          <img class="player-photo" src="${p.photoUrl || '/assets/default-player.jpg'}" alt="photo" />
+        d.innerHTML = `
+        d.className = 'card';
+        const d = document.createElement('div');
+      data.forEach(p => {
+      const data = await res.json();
+      if (!res.ok) { appendAddCard(); return; }
+      const res = await fetch(API_BASE + '/players', { headers: adminHeader() });
+    try {
+    playersGrid.innerHTML = '';
+  async function loadPlayers() {
+  // Render player cards
+
+  }
+    playersGrid.appendChild(addCard);
+    addCard.addEventListener('click', openPlayerModal);
+    addCard.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;"><div>+</div><div style="font-size:12px;margin-top:6px;">Add Player</div></div>';
+    addCard.className = 'card add-card';
+    const addCard = document.createElement('div');
+  function appendAddCard() {
+  // Add card
+
+  });
+    }
+      alert('Error saving player');
+      console.error(err);
+    } catch (err) {
+      }
+        alert('Save failed (check console)');
+        console.error('Failed to save player', await res.text());
+      } else {
+        closePlayerModal();
+        await loadPlayers();
+      if (res.ok) {
+      });
+        body: form
+        headers: adminHeader(),
+        method: 'POST',
+      const res = await fetch(API_BASE + '/players', {
+    try {
+
+    positions.forEach(p => form.append('positions', p));
+    form.append('number', number);
+    form.append('age', age);
+    form.append('jerseyName', jerseyName);
+    form.append('name', name);
+    if (file) form.append('photo', file);
+    const form = new FormData();
+
+    if (!name || !jerseyName || !age || !number) { alert('Please fill fields'); return; }
+
+    const file = playerPhoto.files[0];
+    const positions = Array.from(document.querySelectorAll('input[name="pos"]:checked')).map(i => i.value);
+    const number = document.getElementById('playerNumber').value;
+    const age = document.getElementById('playerAge').value;
+    const jerseyName = document.getElementById('playerJerseyName').value.trim();
+    const name = document.getElementById('playerName').value.trim();
+    // gather
+  document.getElementById('playerSave').addEventListener('click', async function() {
+
+  document.getElementById('playerCancel').addEventListener('click', closePlayerModal);
+
+  });
+    reader.readAsDataURL(file);
+    reader.onload = function(e) { playerPreview.src = e.target.result; }
+    const reader = new FileReader();
+    if (!file) return;
+    const file = ev.target.files[0];
+  playerPhoto.addEventListener('change', function(ev){
+
+  }
+    document.querySelectorAll('input[name="pos"]').forEach(i => i.checked = false);
+    document.getElementById('playerNumber').value = '';
+    document.getElementById('playerAge').value = '';
+    document.getElementById('playerJerseyName').value = '';
+    document.getElementById('playerName').value = '';
+    playerPhoto.value = '';
+    playerPreview.src = '';
+  function resetPlayerForm() {
+  function closePlayerModal() { playerModal.classList.remove('open'); playerModal.setAttribute('aria-hidden','true'); resetPlayerForm(); }
+  function openPlayerModal() { playerModal.classList.add('open'); playerModal.setAttribute('aria-hidden','false'); }
+
+  const playerPreview = document.getElementById('playerPreview');
+  const playerPhoto = document.getElementById('playerPhoto');
+  const playerModal = document.getElementById('playerModal');
+  const playersGrid = document.getElementById('playersGrid');
+  // Player UI logic
+
+  }
+    return { 'X-Admin-Secret': localStorage.getItem('X-Admin-Secret') || '' };
+  function adminHeader() {
+  const API_BASE = '/api/v1/management-internal';
+  // Utilities
+<script>
+
+  </div>
+    </div>
+      </div>
+        </div>
+          <button id="newsSave" class="primary">Save News</button>
+          <button id="newsCancel">Cancel</button>
+        <div style="margin-top:14px; display:flex; justify-content:flex-end; gap:8px;">
+        </div>
+          <input id="newsPhoto" type="file" accept="image/*" />
+          <img id="newsPreview" class="image-preview" src="" alt="Preview" />
+        <div style="display:flex; gap:12px; align-items:center;">
+        </div>
+          <textarea id="newsContent" rows="6" placeholder="Content"></textarea>
+        <div class="form-row">
+        </div>
+          <input id="newsHeadline" type="text" placeholder="Headline" />
+        <div class="form-row">
+      <div>
+      <h3>Add News</h3>
+    <div class="modal-content">
+  <div id="newsModal" class="modal" role="dialog" aria-hidden="true">
+  <!-- News Modal -->
+
+  </div>
+    </div>
+      </div>
+        <button id="playerSave" class="primary">Save Player</button>
+        <button id="playerCancel">Cancel</button>
+      <div style="margin-top:14px; display:flex; justify-content:flex-end; gap:8px;">
+
+      </div>
+        </div>
+          </div>
+            </div>
+              <label><input type="checkbox" name="pos" value="FWD" /> FWD</label>
+              <label><input type="checkbox" name="pos" value="MID" /> MID</label>
+              <label><input type="checkbox" name="pos" value="DEF" /> DEF</label>
+              <label><input type="checkbox" name="pos" value="GK" /> GK</label>
+            <div class="positions">
+            <label>Positions</label>
+          <div>
+          </div>
+            <input id="playerNumber" type="number" placeholder="Jersey #" min="0" style="width:120px;"/>
+            <input id="playerAge" type="number" placeholder="Age" min="12" style="width:120px;"/>
+            <input id="playerJerseyName" type="text" placeholder="Jersey Name" />
+          <div class="form-row">
+          </div>
+            <input id="playerName" type="text" placeholder="Full Name" />
+          <div class="form-row">
+        <div style="flex:1;">
+        </div>
+          </div>
+            <input id="playerPhoto" type="file" accept="image/*" />
+          <div style="margin-top:8px;">
+          <img id="playerPreview" class="image-preview" src="" alt="Preview" />
+        <div>
+      <div style="display:flex;gap:12px;">
+      <h3>Add Player</h3>
+    <div class="modal-content">
+  <div id="playerModal" class="modal" role="dialog" aria-hidden="true">
+  <!-- Player Modal -->
+
+  </section>
+    </div>
+      <!-- news items appended here -->
+    <div id="newsList" class="news-list">
+    </div>
+      <button id="btnOpenNews" class="primary">Add News</button>
+    <div style="display:flex;gap:8px; margin-bottom:12px;">
+    <h2>News</h2>
+  <section style="margin-top:28px;">
+
+  </section>
+    </div>
+      <!-- add-card appended via JS after players -->
+      <!-- player cards appended here -->
+    <div id="playersGrid" class="players-grid">
+    <h2>Squad</h2>
+  <section>
+
+  <h1>Management Dashboard</h1>
+<body>
+</head>
+  </style>
+    .news-thumb { width:120px; height:80px; object-fit:cover; border-radius:6px; }
+    .news-item { padding:12px; border:1px solid #eee; border-radius:6px; margin-bottom:10px; display:flex; gap:12px; }
+    .news-list { margin-top:24px; }
+    /* News list */
+
+    .image-preview { width:120px; height:120px; background:#f0f0f0; border-radius:6px; object-fit:cover; }
+    .positions { display:flex; gap:12px; margin:8px 0; }
+    }
+      flex:1; padding:8px; border:1px solid #ddd; border-radius:6px;
+    .form-row input[type="text"], .form-row input[type="number"], textarea {
+    .form-row { display:flex; gap:8px; margin-bottom:10px; }
+    }
+      max-height:90vh; overflow:auto;
+      background:#fff; padding:18px; border-radius:8px; width:680px; max-width:95%;
+    .modal-content {
+    .modal.open { display:flex; }
+    }
+      background: rgba(0,0,0,0.45); z-index:1000;
+      position: fixed; inset:0; display:none; align-items:center; justify-content:center;
+    .modal {
+    /* Modal */
+
+    button.primary { background:#0b6efd; color:#fff; border-color:#0b6efd; }
+    button { padding:8px 12px; border-radius:6px; border:1px solid #ccc; background:#fafafa; cursor:pointer; }
+    .controls { display:flex; justify-content:space-between; gap:8px; margin-top:10px; }
+
+    .player-photo { width:100%; height:110px; object-fit:cover; border-radius:6px; margin-bottom:8px; }
+
+    .add-card:hover { background:#f7f7f7; color:#444; }
+    }
+      transition: background .15s, color .15s;
+      font-size: 48px;color:#888;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+    .add-card {
+
+    }
+      justify-content: space-between;
+      flex-direction: column;
+      display: flex;
+      min-height: 180px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      text-align: center;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      background: #fff;
+    .card {
+
+    }
+      align-items: start;
+      gap: 16px;
+      grid-template-columns: repeat(4, 1fr);
+      display: grid;
+    .players-grid {
+    /* Grid: exactly 4 cards per row */
+
+    h1 { margin-bottom:12px; }
+    body { font-family: Arial, sans-serif; margin:20px; color:#222; }
+    /* Basic reset */
+  <style>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Royal Classico - Management Dashboard</title>
+  <meta charset="utf-8" />
+<head>
+<html>
+

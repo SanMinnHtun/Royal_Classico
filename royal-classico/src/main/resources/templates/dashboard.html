@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Management Dashboard — Royal Classico</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <style>
+    .dashboard {
+      padding: 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .grid-players {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+    .player-card, .add-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      padding: 12px;
+      border-radius: 8px;
+      min-height: 180px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+    }
+    .player-photo {
+      width:100%;
+      height:110px;
+      object-fit:cover;
+      border-radius:6px;
+      margin-bottom:8px;
+    }
+    .add-card {
+      cursor:pointer;
+      color:#0A1128;
+      font-size:2rem;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .modal {
+      position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;
+    }
+    .modal .panel {background:#fff;padding:18px;border-radius:8px;max-width:520px;width:100%;}
+    .news-list {margin-top:1.5rem;}
+    .news-item {display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #eee}
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+      <h1>Management Dashboard</h1>
+      <div>
+        <button onclick="openNewsModal()" style="padding:8px 12px;background:#003366;color:#fff;border:0;border-radius:6px;">Add News</button>
+      </div>
+    </header>
+
+    <section>
+      <h2>Players</h2>
+      <div class="grid-players" id="playersGrid">
+        <!-- Player cards are injected by JS fetching /api/v1/management-internal/players -->
+      </div>
+    </section>
+
+    <section class="news-list">
+      <h2>News</h2>
+      <div id="newsList"></div>
+    </section>
+  </div>
+
+  <!-- Player Modal -->
+  <div id="playerModal" class="modal">
+    <div class="panel">
+      <h3>Add Player</h3>
+      <input id="p_name" placeholder="Name" style="width:100%;padding:8px;margin:6px 0;" />
+      <input id="p_jerseyName" placeholder="Jersey Name" style="width:100%;padding:8px;margin:6px 0;" />
+      <input id="p_age" type="number" placeholder="Age" style="width:100%;padding:8px;margin:6px 0;" />
+      <input id="p_jerseyNumber" type="number" placeholder="Jersey Number" style="width:100%;padding:8px;margin:6px 0;" />
+      <div style="margin:8px 0;">Positions:</div>
+      <label><input type="checkbox" value="GK" class="poschk"/> GK</label>
+      <label><input type="checkbox" value="DEF" class="poschk"/> DEF</label>
+      <label><input type="checkbox" value="MID" class="poschk"/> MID</label>
+      <label><input type="checkbox" value="FWD" class="poschk"/> FWD</label>
+      <div style="margin-top:8px;">
+        <input id="p_image" type="file" accept="image/*" />
+        <div style="margin-top:8px;"><img id="p_preview" style="max-width:120px;display:none;border-radius:6px;"/></div>
+      </div>
+      <div style="margin-top:12px;text-align:right;">
+        <button onclick="closePlayerModal()">Cancel</button>
+        <button onclick="submitPlayer()" style="margin-left:8px;background:#003366;color:white;padding:8px 12px;border:0;border-radius:6px;">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- News Modal -->
+  <div id="newsModal" class="modal">
+    <div class="panel">
+      <h3>Add News</h3>
+      <input id="n_title" placeholder="Headline" style="width:100%;padding:8px;margin:6px 0;" />
+      <textarea id="n_content" placeholder="Content" style="width:100%;height:120px;padding:8px;margin:6px 0;"></textarea>
+      <div>
+        <input id="n_image" type="file" accept="image/*" />
+        <div style="margin-top:8px;"><img id="n_preview" style="max-width:180px;display:none;border-radius:6px;"/></div>
+      </div>
+      <div style="margin-top:12px;text-align:right;">
+        <button onclick="closeNewsModal()">Cancel</button>
+        <button onclick="submitNews()" style="margin-left:8px;background:#003366;color:white;padding:8px 12px;border:0;border-radius:6px;">Publish</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Auth: redirect to entrance if secret missing
+    (function () {
+      var secret = localStorage.getItem('X-Admin-Secret');
+      if (!secret) location.href = '/royal-classico/entrance';
+    })();
+
+    // Helper: base admin API path
+    const API_BASE = '/api/v1/management-internal';
+    const HEADER = 'X-Admin-Secret';
+
+    // Load players
+    function loadPlayers() {
+      fetch(API_BASE + '/players', {headers: {[HEADER]: localStorage.getItem('X-Admin-Secret')}})
+        .then(r => r.json())
+        .then(list => {
+          const grid = document.getElementById('playersGrid');
+          grid.innerHTML = '';
+          list.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'player-card';
+            card.innerHTML = `\n              <img src="/uploads/${p.imagePath || ''}" class="player-photo" onerror="this.style.display='none'"/>\n              <div><strong>${p.realName || p.name}</strong></div>\n              <div>${p.jerseyName || ''} — #${p.jerseyNumber}</div>\n              <div style="margin-top:8px;"><button onclick="deletePlayer('${p.id}')">Delete</button></div>\n            `;
+            grid.appendChild(card);
+          });
+          // Add Card
+          const add = document.createElement('div');
+          add.className = 'add-card';
+          add.textContent = '+';
+          add.addEventListener('click', openPlayerModal);
+          grid.appendChild(add);
+        }).catch(err => console.error('Failed to load players', err));
+    }
+
+    // Load news
+    function loadNews() {
+      fetch(API_BASE + '/news', {headers: {[HEADER]: localStorage.getItem('X-Admin-Secret')}})
+        .then(r => r.json())
+        .then(list => {
+          const container = document.getElementById('newsList');
+          container.innerHTML = '';
+          list.forEach(n => {
+            const el = document.createElement('div');
+            el.className = 'news-item';
+            el.innerHTML = `<div><strong>${n.title}</strong><div style="font-size:0.9rem;color:#555">${n.content}</div></div><div><button onclick="deleteNews('${n.id}')">Delete</button></div>`;
+            container.appendChild(el);
+          });
+        }).catch(err => console.error('Failed to load news', err));
+    }
+
+    // Player modal
+    function openPlayerModal() { document.getElementById('playerModal').style.display = 'flex'; }
+    function closePlayerModal(){ document.getElementById('playerModal').style.display = 'none'; }
+
+    document.getElementById('p_image').addEventListener('change', function (e) {
+      const f = e.target.files[0];
+      if (!f) return; const p = document.getElementById('p_preview'); p.src = URL.createObjectURL(f); p.style.display = 'block';
+    });
+
+    function submitPlayer() {
+      const name = document.getElementById('p_name').value;
+      const jerseyName = document.getElementById('p_jerseyName').value;
+      const age = document.getElementById('p_age').value;
+      const jerseyNumber = document.getElementById('p_jerseyNumber').value;
+      const positions = Array.from(document.querySelectorAll('.poschk:checked')).map(n=>n.value);
+      const file = document.getElementById('p_image').files[0];
+
+      const fd = new FormData();
+      fd.append('realName', name);
+      fd.append('jerseyName', jerseyName);
+      fd.append('age', age);
+      fd.append('jerseyNumber', jerseyNumber);
+      fd.append('positions', JSON.stringify(positions));
+      if (file) fd.append('image', file);
+
+      fetch(API_BASE + '/players', {method:'POST', headers: {[HEADER]: localStorage.getItem('X-Admin-Secret')}, body: fd})
+        .then(r => { if (!r.ok) throw new Error('Create player failed'); return r.json(); })
+        .then(() => { closePlayerModal(); loadPlayers(); })
+        .catch(err => alert(err));
+    }
+
+    function deletePlayer(id) {
+      if (!confirm('Delete this player?')) return;
+      fetch(API_BASE + '/players/' + id, {method:'DELETE', headers: {[HEADER]: localStorage.getItem('X-Admin-Secret')}})
+        .then(r => { if (r.ok) loadPlayers(); else alert('Delete failed'); })
+        .catch(err => alert(err));
+    }
+
+    // News
+    function openNewsModal(){ document.getElementById('newsModal').style.display = 'flex'; }
+    function closeNewsModal(){ document.getElementById('newsModal').style.display = 'none'; }
+
+    document.getElementById('n_image').addEventListener('change', function (e) {
+      const f = e.target.files[0]; if (!f) return; const p = document.getElementById('n_preview'); p.src = URL.createObjectURL(f); p.style.display = 'block';
+    });
+
+    function submitNews() {
+      const title = document.getElementById('n_title').value;
+      const content = document.getElementById('n_content').value;
+      const file = document.getElementById('n_image').files[0];
+      const fd = new FormData();
+      fd.append('title', title); fd.append('content', content); if (file) fd.append('image', file);
+
+      fetch(API_BASE + '/news', {method:'POST', headers: {[HEADER]: localStorage.getItem('X-Admin-Secret')}, body: fd})
+        .then(r => { if (!r.ok) throw new Error('Create news failed'); return r.json(); })
+        .then(() => { closeNewsModal(); loadNews(); })
+        .catch(err => alert(err));
+    }
+
+    function deleteNews(id) {
+      if (!confirm('Delete this news post?')) return;
+      fetch(API_BASE + '/news/' + id, {method:'DELETE', headers: {[HEADER]: localStorage.getItem('X-Admin-Secret')}})
+        .then(r => { if (r.ok) loadNews(); else alert('Delete failed'); })
+        .catch(err => alert(err));
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', function () {
+      loadPlayers(); loadNews();
+      // close modals on background click
+      document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', function (e) { if (e.target === m) m.style.display='none'; }));
+    });
+  </script>
+</body>
+</html>
