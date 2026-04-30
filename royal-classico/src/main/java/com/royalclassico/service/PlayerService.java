@@ -49,8 +49,18 @@ public class PlayerService {
 
     public Player createPlayer(Player player, MultipartFile imageFile) throws IOException {
         if (imageFile != null && !imageFile.isEmpty()) {
-            String path = fileStorageService.saveFile(imageFile, "players");
-            player.setImagePath(path);
+            try {
+                String path = fileStorageService.saveFile(imageFile, "players");
+                // Ensure we save a web-relative path (no absolute filesystem paths)
+                if (path != null) {
+                    // path is like "players/abcd.jpg" -> store as players/abcd.jpg (template maps to /uploads/{p})
+                    player.setImagePath(path);
+                }
+            } catch (IOException e) {
+                log.error("Failed to store player image", e);
+                // Propagate so controllers can return 500, but avoid leaving partial state
+                throw e;
+            }
         }
         return playerRepository.save(player);
     }

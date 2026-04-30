@@ -42,24 +42,29 @@ public class ManagementApiController {
 
     @PostMapping(value = "/players", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createPlayer(
-            @RequestPart("realName") String realName,
+            @RequestPart("name") String name,
             @RequestPart(value = "jerseyName", required = false) String jerseyName,
             @RequestPart(value = "age", required = false) Integer age,
             @RequestPart("jerseyNumber") Integer jerseyNumber,
             @RequestPart(value = "positions", required = false) String positionsJson,
-            @RequestPart(value = "image", required = false) MultipartFile image
-    ) {
+            @RequestPart(value = "image", required = false) MultipartFile image)
+    {
         try {
+            // Self-healing: ensure uploads/players exists so we never crash
+            java.nio.file.Files.createDirectories(java.nio.file.Paths.get("uploads", "players"));
+
             Player p = new Player();
-            p.setRealName(realName);
+            p.setName(name);
+            // also keep realName for backward compatibility
+            p.setRealName(name);
             p.setJerseyName(jerseyName);
             p.setAge(age);
             p.setJerseyNumber(jerseyNumber);
+
             if (positionsJson != null && !positionsJson.isBlank()) {
                 String trimmed = positionsJson.trim();
-                // remove surrounding brackets and quotes, then split by comma
                 trimmed = trimmed.replaceAll("[\\[\\]\"]", "");
-                List<String> positions = new ArrayList<>();
+                java.util.List<String> positions = new java.util.ArrayList<>();
                 if (!trimmed.isBlank()) {
                     for (String s : trimmed.split("\\s*,\\s*")) {
                         if (!s.isBlank()) positions.add(s);
@@ -67,18 +72,34 @@ public class ManagementApiController {
                 }
                 p.setPositions(positions);
             }
+
             if (image != null && !image.isEmpty()) {
-                String path = fileService.storeFile(image, "players");
-                p.setImagePath(path);
+                String original = image.getOriginalFilename();
+                String safeOriginal = (original == null) ? "upload" : original.replaceAll("[^a-zA-Z0-9._-]", "_");
+                String ext = "";
+                int i = safeOriginal.lastIndexOf('.');
+                if (i >= 0) ext = safeOriginal.substring(i);
+                String fileName = System.currentTimeMillis() + "_" + (i >= 0 ? safeOriginal.substring(0, i) : safeOriginal) + ext;
+
+                java.nio.file.Path target = java.nio.file.Paths.get("uploads", "players", fileName).toAbsolutePath().normalize();
+                try {
+                    image.transferTo(target.toFile());
+                } catch (IOException ioe) {
+                    // expose errors clearly in the console for debugging
+                    ioe.printStackTrace();
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to write uploaded file: " + ioe.getMessage());
+                }
+
+                // Save ONLY the web relative path
+                p.setImagePath("/uploads/players/" + fileName);
             }
+
             playerRepository.save(p);
             return ResponseEntity.status(HttpStatus.CREATED).body(p);
-        } catch (IOException e) {
-            System.err.println("File upload failed: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed");
-        } catch (Exception ex) {
-            System.err.println("Failed to create player: " + ex.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create player");
+        } catch (Exception e) {
+            // Transparent error logging so failures are visible in IntelliJ console
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create player: " + e.getMessage());
         }
     }
 

@@ -86,7 +86,8 @@
           <div class="player-card__img-wrap">
             <img th:if="${player.imagePath != null}"
                  th:src="@{/uploads/{p}(p=${player.imagePath})}"
-                 th:alt="${player.name}" class="player-card__img"/>
+                 th:alt="${player.name}" class="player-card__img"
+                 onerror="this.onerror=null;this.src='/images/default-player.png';"/>
             <div th:if="${player.imagePath == null}" class="player-card__img-placeholder">🧤</div>
             <span class="player-card__number" th:text="${player.jerseyNumber}">1</span>
           </div>
@@ -108,7 +109,8 @@
           <div class="player-card__img-wrap">
             <img th:if="${player.imagePath != null}"
                  th:src="@{/uploads/{p}(p=${player.imagePath})}"
-                 th:alt="${player.name}" class="player-card__img"/>
+                 th:alt="${player.name}" class="player-card__img"
+                 onerror="this.onerror=null;this.src='/images/default-player.png';"/>
             <div th:if="${player.imagePath == null}" class="player-card__img-placeholder">🛡️</div>
             <span class="player-card__number" th:text="${player.jerseyNumber}">5</span>
           </div>
@@ -130,7 +132,8 @@
           <div class="player-card__img-wrap">
             <img th:if="${player.imagePath != null}"
                  th:src="@{/uploads/{p}(p=${player.imagePath})}"
-                 th:alt="${player.name}" class="player-card__img"/>
+                 th:alt="${player.name}" class="player-card__img"
+                 onerror="this.onerror=null;this.src='/images/default-player.png';"/>
             <div th:if="${player.imagePath == null}" class="player-card__img-placeholder">⚙️</div>
             <span class="player-card__number" th:text="${player.jerseyNumber}">8</span>
           </div>
@@ -152,7 +155,8 @@
           <div class="player-card__img-wrap">
             <img th:if="${player.imagePath != null}"
                  th:src="@{/uploads/{p}(p=${player.imagePath})}"
-                 th:alt="${player.name}" class="player-card__img"/>
+                 th:alt="${player.name}" class="player-card__img"
+                 onerror="this.onerror=null;this.src='/images/default-player.png';"/>
             <div th:if="${player.imagePath == null}" class="player-card__img-placeholder">⚽</div>
             <span class="player-card__number" th:text="${player.jerseyNumber}">9</span>
           </div>
