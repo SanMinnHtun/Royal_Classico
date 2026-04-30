@@ -48,13 +48,14 @@ public class FileStorageService {
         Path targetDir = Paths.get(uploadDir).resolve(subDir).toAbsolutePath().normalize();
         Files.createDirectories(targetDir);
 
-        // Build a unique filename to avoid collisions
+        // Build a unique filename to avoid collisions — use timestamp to keep filenames readable
         String originalFilename = file.getOriginalFilename();
         String extension = "";
         if (originalFilename != null && originalFilename.contains(".")) {
             extension = originalFilename.substring(originalFilename.lastIndexOf("."));
         }
-        String uniqueFilename = UUID.randomUUID() + extension;
+        // Use timestamp + random suffix (short) for uniqueness
+        String uniqueFilename = System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 8) + extension;
 
         Path targetPath = targetDir.resolve(uniqueFilename);
         Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);

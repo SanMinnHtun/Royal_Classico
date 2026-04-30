@@ -21,7 +21,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         String absolutePath = Paths.get(uploadDir).toAbsolutePath().normalize().toUri().toString();
 
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations(absolutePath);
+                .addResourceLocations("file:./uploads/");
 
         // Also expose a friendly /images/** mapping for templates to use
         registry.addResourceHandler("/images/**")
