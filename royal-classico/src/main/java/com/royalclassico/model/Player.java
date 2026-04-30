@@ -10,6 +10,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Max;
 
+import java.util.List;
+
 /**
  * Represents a player in the squad.
  */
@@ -22,11 +24,15 @@ public class Player {
     @Id
     private String id;
 
-    @NotBlank(message = "Player name is required")
+    // Legacy / public-facing short name used by some controllers
     private String name;
 
-    @NotNull(message = "Position is required")
-    private Position position;
+    @NotBlank(message = "Real name is required")
+    private String realName;
+
+    private String jerseyName;
+
+    private Integer age;
 
     @NotNull(message = "Jersey number is required")
     @Min(value = 1, message = "Jersey number must be at least 1")
@@ -36,7 +42,12 @@ public class Player {
     /** Relative path under /uploads/, e.g. "players/image.jpg" */
     private String imagePath;
 
-    /** Allowed positions for squad management */
+    /** Multiple allowed positions (GK, DEF, MID, FWD) as strings */
+    private List<String> positions;
+
+    /** Single canonical position (legacy code expects Player.Position) */
+    private Position position;
+
     public enum Position {
         GK, DEF, MID, FWD
     }

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Entrance — Royal Classico</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+  <div style="display:flex;align-items:center;justify-content:center;height:80vh;">
+    <div style="max-width:420px;width:100%;padding:24px;border:1px solid #ddd;border-radius:8px;text-align:center;">
+      <h2>Enter Admin PIN</h2>
+      <input id="admin-pin" type="password" placeholder="System PIN" style="width:100%;padding:10px;margin:12px 0;border-radius:4px;border:1px solid #ccc;" />
+      <button id="submit-pin" style="padding:10px 16px;border-radius:4px;background:#003366;color:#fff;border:0;cursor:pointer;">Enter</button>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('submit-pin').addEventListener('click', function () {
+      var pin = document.getElementById('admin-pin').value;
+      console.log('Entrance PIN submitted');
+      if (pin === '20526') {
+        try { localStorage.setItem('X-Admin-Secret', 'RC_SECRET_APRIL_2026'); } catch (e) { }
+        window.location.href = '/royal-classico/admin-control-system-april202650';
+      } else {
+        // Stay on page and do not reveal why it failed
+        document.getElementById('admin-pin').value = '';
+      }
+    });
+  </script>
+</body>
+</html>

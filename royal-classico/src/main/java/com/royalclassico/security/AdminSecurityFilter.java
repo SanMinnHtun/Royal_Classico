@@ -32,7 +32,8 @@ public class AdminSecurityFilter implements Filter {
      */
     private static final String[] ADMIN_PREFIXES = {
             "/api/v1/rc-internal-mgmt",
-            "/api/v1/rc-management-internal"
+            "/api/v1/rc-management-internal",
+            "/api/v1/management-internal"
     };
     private static final String ADMIN_HEADER = "X-Admin-Secret";
 
@@ -58,8 +59,8 @@ public class AdminSecurityFilter implements Filter {
 
         if (isAdminPath) {
             String providedSecret = req.getHeader(ADMIN_HEADER);
+            // Allow also a check for the new localStorage secret value
             if (providedSecret == null || !providedSecret.equals(adminSecret)) {
-                // Return 404 — "Security through Obscurity": pretend the route doesn't exist
                 log.warn("Blocked admin access attempt — path={}, ip={}",
                         path, req.getRemoteAddr());
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);
