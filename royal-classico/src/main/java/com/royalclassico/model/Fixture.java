@@ -5,13 +5,10 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import java.time.LocalDate;
-import java.time.LocalTime;
 
 /**
  * Single-entry model for the next upcoming match fixture.
+ * Fields use simple types (String for date/time) to avoid serialization issues.
  * Only one document of this type should exist in the DB (upsert pattern).
  */
 @Data
@@ -23,15 +20,24 @@ public class Fixture {
     @Id
     private String id;
 
-    @NotBlank(message = "Opponent name is required")
-    private String opponent;
+    /** The rival team name */
+    private String rivalTeam;
 
-    @NotNull(message = "Match date is required")
-    private LocalDate matchDate;
+    /** Match date as a plain string, e.g. "2026-06-15" */
+    private String date;
 
-    @NotNull(message = "Match time is required")
-    private LocalTime matchTime;
+    /** Kick-off time as a plain string, e.g. "15:00" */
+    private String time;
 
-    @NotBlank(message = "Pitch/venue is required")
-    private String pitch;
+    /** Stadium / venue name */
+    private String stadium;
+
+    /**
+     * Result display string — defaults to "vs" before the match,
+     * updated to "2-1" or similar after.
+     */
+    private String result = "vs";
+
+    /** True once the match has been played and a result is recorded */
+    private boolean isFinished = false;
 }

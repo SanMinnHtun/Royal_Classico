@@ -31,34 +31,17 @@ public class PlayerService {
         return playerRepository.findById(id);
     }
 
-    /**
-     * Returns players grouped by position in display order: GK → DEF → MID → FWD.
-     */
-    public Map<Player.Position, List<Player>> getPlayersGroupedByPosition() {
-        Map<Player.Position, List<Player>> grouped = new LinkedHashMap<>();
-        for (Player.Position pos : Player.Position.values()) {
-            List<Player> players = playerRepository.findByPositionOrderByJerseyNumberAsc(pos);
-            if (!players.isEmpty()) {
-                grouped.put(pos, players);
-            }
-        }
-        return grouped;
-    }
-
     // ── Write ───────────────────────────────────────────────────────────────
 
     public Player createPlayer(Player player, MultipartFile imageFile) throws IOException {
         if (imageFile != null && !imageFile.isEmpty()) {
             try {
                 String path = fileStorageService.saveFile(imageFile, "players");
-                // Ensure we save a web-relative path (no absolute filesystem paths)
                 if (path != null) {
-                    // path is like "players/abcd.jpg" -> store as players/abcd.jpg (template maps to /uploads/{p})
                     player.setImagePath(path);
                 }
             } catch (IOException e) {
                 log.error("Failed to store player image", e);
-                // Propagate so controllers can return 500, but avoid leaving partial state
                 throw e;
             }
         }
@@ -70,10 +53,13 @@ public class PlayerService {
                 .orElseThrow(() -> new NoSuchElementException("Player not found: " + id));
 
         existing.setName(updatedData.getName());
-        existing.setPosition(updatedData.getPosition());
+        existing.setJerseyName(updatedData.getJerseyName());
+        existing.setAge(updatedData.getAge());
         existing.setJerseyNumber(updatedData.getJerseyNumber());
+        if (updatedData.getPositions() != null) {
+            existing.setPositions(updatedData.getPositions());
+        }
 
-        // Handle image replacement — delete old file first (strict cleanup)
         if (imageFile != null && !imageFile.isEmpty()) {
             fileStorageService.deleteFile(existing.getImagePath());
             String newPath = fileStorageService.saveFile(imageFile, "players");
@@ -86,7 +72,7 @@ public class PlayerService {
     public void deletePlayer(String id) {
         Player player = playerRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Player not found: " + id));
-        fileStorageService.deleteFile(player.getImagePath()); // strict cleanup
+        fileStorageService.deleteFile(player.getImagePath());
         playerRepository.deleteById(id);
         log.info("Deleted player id={}, name={}", id, player.getName());
     }

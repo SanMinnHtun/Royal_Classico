@@ -6,10 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.Optional;
-
 /**
  * Secret Admin REST API for Next Fixture management.
  *
@@ -28,6 +24,7 @@ public class AdminFixtureController {
     /** GET the current fixture */
     @GetMapping
     public ResponseEntity<Fixture> getFixture() {
+        System.out.println("[AdminFixtureController] GET /fixture");
         return fixtureService.getNextFixture()
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -37,18 +34,25 @@ public class AdminFixtureController {
      * PUT — Create or replace the next fixture.
      * Body (JSON):
      * {
-     *   "opponent":  "FC Rivals",
-     *   "matchDate": "2025-06-15",
-     *   "matchTime": "15:00",
-     *   "pitch":     "Municipal Stadium, Field 3"
+     *   "rivalTeam": "FC Rivals",
+     *   "date":      "2026-06-15",
+     *   "time":      "15:00",
+     *   "stadium":   "Municipal Stadium, Field 3",
+     *   "result":    "vs",
+     *   "isFinished": false
      * }
      */
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> upsertFixture(@RequestBody Fixture fixture) {
+        System.out.println("[AdminFixtureController] PUT /fixture — rivalTeam=" + fixture.getRivalTeam()
+                + ", date=" + fixture.getDate() + ", time=" + fixture.getTime()
+                + ", stadium=" + fixture.getStadium());
         try {
             Fixture saved = fixtureService.upsertFixture(fixture);
+            System.out.println("[AdminFixtureController] Fixture saved id=" + saved.getId());
             return ResponseEntity.ok(saved);
         } catch (Exception e) {
+            System.err.println("[AdminFixtureController] ERROR: " + e.getMessage());
             return ResponseEntity.badRequest().body("Invalid fixture data: " + e.getMessage());
         }
     }
@@ -56,6 +60,7 @@ public class AdminFixtureController {
     /** DELETE — Clear the upcoming fixture (e.g., match is done) */
     @DeleteMapping
     public ResponseEntity<Void> deleteFixture() {
+        System.out.println("[AdminFixtureController] DELETE /fixture");
         fixtureService.deleteFixture();
         return ResponseEntity.noContent().build();
     }

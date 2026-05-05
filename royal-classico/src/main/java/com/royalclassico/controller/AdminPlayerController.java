@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -26,11 +27,13 @@ public class AdminPlayerController {
 
     @GetMapping
     public ResponseEntity<List<Player>> getAllPlayers() {
+        System.out.println("[AdminPlayerController] GET /players");
         return ResponseEntity.ok(playerService.getAllPlayers());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Player> getPlayer(@PathVariable String id) {
+        System.out.println("[AdminPlayerController] GET /players/" + id);
         return playerService.getPlayerById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -38,28 +41,34 @@ public class AdminPlayerController {
 
     /**
      * POST — Add a new player.
-     * position must be one of: GK, DEF, MID, FWD
+     * positions: comma-separated string, e.g. "GK" or "DEF,MID"
      */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createPlayer(
-            @RequestPart("name")         String name,
-            @RequestPart("position")     String position,
-            @RequestPart("jerseyNumber") String jerseyNumber,
-            @RequestPart(value = "image", required = false) MultipartFile image) {
+            @RequestPart("name")                              String name,
+            @RequestPart(value = "jerseyName", required = false) String jerseyName,
+            @RequestPart(value = "positions",  required = false) String positionsRaw,
+            @RequestPart("jerseyNumber")                      String jerseyNumber,
+            @RequestPart(value = "image", required = false)  MultipartFile image) {
 
+        System.out.println("[AdminPlayerController] POST /players — name=" + name);
         try {
             Player player = new Player();
             player.setName(name);
-            player.setPosition(Player.Position.valueOf(position.toUpperCase()));
-            player.setJerseyNumber(Integer.parseInt(jerseyNumber));
+            player.setJerseyName(jerseyName);
+            player.setJerseyNumber(Integer.parseInt(jerseyNumber.trim()));
+            if (positionsRaw != null && !positionsRaw.isBlank()) {
+                player.setPositions(Arrays.asList(positionsRaw.trim().split("\\s*,\\s*")));
+            }
             Player created = playerService.createPlayer(player, image);
+            System.out.println("[AdminPlayerController] Created player id=" + created.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body("Invalid position. Use: GK, DEF, MID, FWD. Error: " + e.getMessage());
+            System.err.println("[AdminPlayerController] Bad request: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Invalid data: " + e.getMessage());
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Image upload failed: " + e.getMessage());
+            System.err.println("[AdminPlayerController] Image upload failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Image upload failed: " + e.getMessage());
         }
     }
 
@@ -69,26 +78,29 @@ public class AdminPlayerController {
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updatePlayer(
             @PathVariable String id,
-            @RequestPart("name")         String name,
-            @RequestPart("position")     String position,
-            @RequestPart("jerseyNumber") String jerseyNumber,
-            @RequestPart(value = "image", required = false) MultipartFile image) {
+            @RequestPart("name")                              String name,
+            @RequestPart(value = "jerseyName", required = false) String jerseyName,
+            @RequestPart(value = "positions",  required = false) String positionsRaw,
+            @RequestPart("jerseyNumber")                      String jerseyNumber,
+            @RequestPart(value = "image", required = false)  MultipartFile image) {
 
+        System.out.println("[AdminPlayerController] PUT /players/" + id);
         try {
             Player updatedData = new Player();
             updatedData.setName(name);
-            updatedData.setPosition(Player.Position.valueOf(position.toUpperCase()));
-            updatedData.setJerseyNumber(Integer.parseInt(jerseyNumber));
+            updatedData.setJerseyName(jerseyName);
+            updatedData.setJerseyNumber(Integer.parseInt(jerseyNumber.trim()));
+            if (positionsRaw != null && !positionsRaw.isBlank()) {
+                updatedData.setPositions(Arrays.asList(positionsRaw.trim().split("\\s*,\\s*")));
+            }
             Player updated = playerService.updatePlayer(id, updatedData, image);
             return ResponseEntity.ok(updated);
         } catch (NoSuchElementException e) {
             return ResponseEntity.notFound().build();
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body("Invalid data: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Invalid data: " + e.getMessage());
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Image upload failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Image upload failed: " + e.getMessage());
         }
     }
 
@@ -97,6 +109,7 @@ public class AdminPlayerController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePlayer(@PathVariable String id) {
+        System.out.println("[AdminPlayerController] DELETE /players/" + id);
         try {
             playerService.deletePlayer(id);
             return ResponseEntity.noContent().build();

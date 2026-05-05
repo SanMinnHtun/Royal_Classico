@@ -69,16 +69,16 @@
 
     /* Playfair Display headlines for the "Royal" feel */
     .news-archive-card__title {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: 1.22rem;
-      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 500;
       margin-bottom: 0.75rem;
-      line-height: 1.3;
+      line-height: 1.4;
       color: var(--clr-text);
     }
 
     .news-archive-card__body p {
-      font-family: 'Montserrat', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 0.82rem;
       line-height: 1.7;
       color: var(--clr-muted);
@@ -127,21 +127,21 @@
     <div class="fixture-banner__label">Next Match</div>
     <div class="fixture-banner__match">
       <span class="fixture-banner__team">Royal Classico</span>
-      <span class="fixture-banner__vs">VS</span>
-      <span class="fixture-banner__team" th:text="${nextFixture.opponent}">Opponent</span>
+      <span class="fixture-banner__vs" th:text="${nextFixture.result ?: 'vs'}">vs</span>
+      <span class="fixture-banner__team" th:text="${nextFixture.rivalTeam}">Rival Team</span>
     </div>
     <div class="fixture-banner__meta">
       <div class="fixture-meta-item">
         <span>Date</span>
-        <span th:text="${#temporals.format(nextFixture.matchDate, 'EEE, dd MMM yyyy')}">Date</span>
+        <span th:text="${nextFixture.date}">Date</span>
       </div>
       <div class="fixture-meta-item">
         <span>Kick-off</span>
-        <span th:text="${#temporals.format(nextFixture.matchTime, 'HH:mm')}">Time</span>
+        <span th:text="${nextFixture.time}">Time</span>
       </div>
       <div class="fixture-meta-item">
         <span>Venue</span>
-        <span th:text="${nextFixture.pitch}">Pitch</span>
+        <span th:text="${nextFixture.stadium}">Stadium</span>
       </div>
     </div>
   </div>
