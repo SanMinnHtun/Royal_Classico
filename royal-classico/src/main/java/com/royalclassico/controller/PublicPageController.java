@@ -1,6 +1,5 @@
 package com.royalclassico.controller;
 
-import com.royalclassico.model.Player;
 import com.royalclassico.service.FixtureService;
 import com.royalclassico.service.NewsService;
 import com.royalclassico.service.PlayerService;
@@ -8,9 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-
-import java.util.Map;
-import java.util.List;
 
 /**
  * Public-facing Thymeleaf page controller.
@@ -27,17 +23,18 @@ public class PublicPageController {
     /** Homepage: slider posts + next fixture widget */
     @GetMapping("/")
     public String home(Model model) {
+        System.out.println("[PublicPageController] GET / (home)");
         model.addAttribute("sliderPosts",  newsService.getSliderPosts());
         model.addAttribute("latestPosts",  newsService.getLatestPosts());
         model.addAttribute("nextFixture",  fixtureService.getNextFixture().orElse(null));
         return "index";
     }
 
-    /** Squad page: players grouped by position */
+    /** Squad page: passes all players as flat list — grouped by JS on the frontend */
     @GetMapping("/squad")
     public String squad(Model model) {
-        Map<Player.Position, List<Player>> squad = playerService.getPlayersGroupedByPosition();
-        model.addAttribute("squadByPosition", squad);
+        System.out.println("[PublicPageController] GET /squad");
+        model.addAttribute("allPlayers",  playerService.getAllPlayers());
         model.addAttribute("nextFixture", fixtureService.getNextFixture().orElse(null));
         return "squad";
     }
@@ -45,6 +42,7 @@ public class PublicPageController {
     /** Full news archive page */
     @GetMapping("/news")
     public String news(Model model) {
+        System.out.println("[PublicPageController] GET /news");
         model.addAttribute("newsPosts", newsService.getLatestPosts());
         model.addAttribute("nextFixture", fixtureService.getNextFixture().orElse(null));
         return "news";

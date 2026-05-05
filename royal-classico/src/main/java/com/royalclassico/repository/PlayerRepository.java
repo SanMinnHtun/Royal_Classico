@@ -11,6 +11,6 @@ import java.util.List;
 @Repository
 public interface PlayerRepository extends MongoRepository<Player, String> {
 
-    /** Find all players with a given position (for grouped squad display). */
-    List<Player> findByPositionOrderByJerseyNumberAsc(Player.Position position);
+    /** Find players that contain a given position string in their positions list. */
+    List<Player> findByPositionsContaining(String position);
 }

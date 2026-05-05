@@ -47,125 +47,63 @@
     <div class="fixture-banner__label">Next Match</div>
     <div class="fixture-banner__match">
       <span class="fixture-banner__team">Royal Classico</span>
-      <span class="fixture-banner__vs">VS</span>
-      <span class="fixture-banner__team" th:text="${nextFixture.opponent}">Opponent</span>
+      <span class="fixture-banner__vs" th:text="${nextFixture.result ?: 'vs'}">vs</span>
+      <span class="fixture-banner__team" th:text="${nextFixture.rivalTeam}">Rival Team</span>
     </div>
     <div class="fixture-banner__meta">
       <div class="fixture-meta-item">
         <span>Date</span>
-        <span th:text="${#temporals.format(nextFixture.matchDate, 'EEE, dd MMM yyyy')}">Date</span>
+        <span th:text="${nextFixture.date}">Date</span>
       </div>
       <div class="fixture-meta-item">
         <span>Kick-off</span>
-        <span th:text="${#temporals.format(nextFixture.matchTime, 'HH:mm')}">Time</span>
+        <span th:text="${nextFixture.time}">Time</span>
       </div>
       <div class="fixture-meta-item">
         <span>Venue</span>
-        <span th:text="${nextFixture.pitch}">Pitch</span>
+        <span th:text="${nextFixture.stadium}">Stadium</span>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══ SQUAD BY POSITION ════════════════════════════════════ -->
+<!-- ══ SQUAD — FLAT LIST GROUPED BY JS ═══════════════════════ -->
 <section class="squad-section">
   <div class="container">
 
-    <div th:if="${squadByPosition.isEmpty()}" class="empty-state">
+    <div th:if="${#lists.isEmpty(allPlayers)}" class="empty-state">
       <div class="empty-state__icon">👕</div>
       <p class="empty-state__text">Squad hasn't been announced yet. Stay tuned!</p>
     </div>
 
     <!-- Goalkeepers -->
-    <div th:if="${squadByPosition.containsKey(T(com.royalclassico.model.Player.Position).GK)}"
-         class="position-group">
+    <div class="position-group" id="group-gk" style="display:none;">
       <p class="position-group__label">Goalkeepers</p>
-      <div class="players-grid">
-        <div th:each="player : ${squadByPosition.get(T(com.royalclassico.model.Player.Position).GK)}"
-             class="player-card">
-          <div class="player-card__img-wrap">
-            <img th:if="${player.imagePath != null}"
-                 th:src="@{/uploads/{p}(p=${player.imagePath})}"
-                 th:alt="${player.name}" class="player-card__img"
-                 onerror="this.onerror=null;this.src='/images/default-player.png';"/>
-            <div th:if="${player.imagePath == null}" class="player-card__img-placeholder">🧤</div>
-            <span class="player-card__number" th:text="${player.jerseyNumber}">1</span>
-          </div>
-          <div class="player-card__body">
-            <p class="player-card__name" th:text="${player.name}">Player Name</p>
-            <span class="player-card__pos">GK</span>
-          </div>
-        </div>
-      </div>
+      <div class="players-grid" id="grid-gk"></div>
     </div>
 
     <!-- Defenders -->
-    <div th:if="${squadByPosition.containsKey(T(com.royalclassico.model.Player.Position).DEF)}"
-         class="position-group">
+    <div class="position-group" id="group-def" style="display:none;">
       <p class="position-group__label">Defenders</p>
-      <div class="players-grid">
-        <div th:each="player : ${squadByPosition.get(T(com.royalclassico.model.Player.Position).DEF)}"
-             class="player-card">
-          <div class="player-card__img-wrap">
-            <img th:if="${player.imagePath != null}"
-                 th:src="@{/uploads/{p}(p=${player.imagePath})}"
-                 th:alt="${player.name}" class="player-card__img"
-                 onerror="this.onerror=null;this.src='/images/default-player.png';"/>
-            <div th:if="${player.imagePath == null}" class="player-card__img-placeholder">🛡️</div>
-            <span class="player-card__number" th:text="${player.jerseyNumber}">5</span>
-          </div>
-          <div class="player-card__body">
-            <p class="player-card__name" th:text="${player.name}">Player Name</p>
-            <span class="player-card__pos">DEF</span>
-          </div>
-        </div>
-      </div>
+      <div class="players-grid" id="grid-def"></div>
     </div>
 
     <!-- Midfielders -->
-    <div th:if="${squadByPosition.containsKey(T(com.royalclassico.model.Player.Position).MID)}"
-         class="position-group">
+    <div class="position-group" id="group-mid" style="display:none;">
       <p class="position-group__label">Midfielders</p>
-      <div class="players-grid">
-        <div th:each="player : ${squadByPosition.get(T(com.royalclassico.model.Player.Position).MID)}"
-             class="player-card">
-          <div class="player-card__img-wrap">
-            <img th:if="${player.imagePath != null}"
-                 th:src="@{/uploads/{p}(p=${player.imagePath})}"
-                 th:alt="${player.name}" class="player-card__img"
-                 onerror="this.onerror=null;this.src='/images/default-player.png';"/>
-            <div th:if="${player.imagePath == null}" class="player-card__img-placeholder">⚙️</div>
-            <span class="player-card__number" th:text="${player.jerseyNumber}">8</span>
-          </div>
-          <div class="player-card__body">
-            <p class="player-card__name" th:text="${player.name}">Player Name</p>
-            <span class="player-card__pos">MID</span>
-          </div>
-        </div>
-      </div>
+      <div class="players-grid" id="grid-mid"></div>
     </div>
 
     <!-- Forwards -->
-    <div th:if="${squadByPosition.containsKey(T(com.royalclassico.model.Player.Position).FWD)}"
-         class="position-group">
+    <div class="position-group" id="group-fwd" style="display:none;">
       <p class="position-group__label">Forwards</p>
-      <div class="players-grid">
-        <div th:each="player : ${squadByPosition.get(T(com.royalclassico.model.Player.Position).FWD)}"
-             class="player-card">
-          <div class="player-card__img-wrap">
-            <img th:if="${player.imagePath != null}"
-                 th:src="@{/uploads/{p}(p=${player.imagePath})}"
-                 th:alt="${player.name}" class="player-card__img"
-                 onerror="this.onerror=null;this.src='/images/default-player.png';"/>
-            <div th:if="${player.imagePath == null}" class="player-card__img-placeholder">⚽</div>
-            <span class="player-card__number" th:text="${player.jerseyNumber}">9</span>
-          </div>
-          <div class="player-card__body">
-            <p class="player-card__name" th:text="${player.name}">Player Name</p>
-            <span class="player-card__pos">FWD</span>
-          </div>
-        </div>
-      </div>
+      <div class="players-grid" id="grid-fwd"></div>
+    </div>
+
+    <!-- Unassigned -->
+    <div class="position-group" id="group-other" style="display:none;">
+      <p class="position-group__label">Players</p>
+      <div class="players-grid" id="grid-other"></div>
     </div>
 
   </div>
@@ -190,5 +128,86 @@
 
 <script th:src="@{/js/main.js}"></script>
 <script th:src="@{/js/admin.js}"></script>
+<script>
+  /* ── Squad Page: render players grouped by position ────── */
+  (function () {
+    const EMOJI = { GK: '🧤', DEF: '🛡️', MID: '⚙️', FWD: '⚽', OTHER: '👤' };
+
+    /* Safe HTML escape to avoid XSS in template literals */
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function cardHtml(p) {
+      const positions = (p.positions && p.positions.length) ? p.positions : [];
+      const primaryPos = positions.length ? positions[0].toUpperCase() : 'OTHER';
+      const imgSrc = p.imagePath || '';
+
+      // Image or emoji placeholder
+      const imgTag = imgSrc
+        ? `<img src="${imgSrc}" alt="${escHtml(p.name || '')}" class="player-card__img"
+               onerror="this.style.display='none';this.parentElement.querySelector('.player-card__img-placeholder').style.display='flex'">
+           <div class="player-card__img-placeholder" style="display:none;">${EMOJI[primaryPos] || '👤'}</div>`
+        : `<div class="player-card__img-placeholder">${EMOJI[primaryPos] || '👤'}</div>`;
+
+      // All positions as badges
+      const posBadges = positions.length
+        ? positions.map(pos => `<span class="player-card__pos">${escHtml(pos)}</span>`).join(' ')
+        : '<span class="player-card__pos">—</span>';
+
+      // Jersey name line (only if different from name)
+      const jerseyLine = (p.jerseyName && p.jerseyName !== p.name)
+        ? `<p class="pc-jersey-name">${escHtml(p.jerseyName)}</p>` : '';
+
+      // Age line
+      const ageLine = p.age
+        ? `<p class="pc-age">Age ${p.age}</p>` : '';
+
+      return `
+        <div class="player-card">
+          <div class="player-card__img-wrap">
+            ${imgTag}
+            <span class="player-card__number">${p.jerseyNumber != null ? p.jerseyNumber : ''}</span>
+          </div>
+          <div class="player-card__body">
+            <p class="player-card__name">${escHtml(p.name || 'Player')}</p>
+            ${jerseyLine}
+            ${ageLine}
+            <div class="pc-pos-row">${posBadges}</div>
+          </div>
+        </div>`;
+    }
+
+    fetch('/api/v1/public/squad')
+      .then(r => r.json())
+      .then(players => {
+        const groups = { GK: [], DEF: [], MID: [], FWD: [], OTHER: [] };
+        players.forEach(p => {
+          if (p.positions && p.positions.length > 0) {
+            const first = p.positions[0].toUpperCase();
+            if (groups[first]) groups[first].push(p);
+            else groups.OTHER.push(p);
+          } else {
+            groups.OTHER.push(p);
+          }
+        });
+
+        const map = { GK: 'gk', DEF: 'def', MID: 'mid', FWD: 'fwd', OTHER: 'other' };
+        Object.entries(groups).forEach(([key, list]) => {
+          if (list.length === 0) return;
+          const groupEl = document.getElementById('group-' + map[key]);
+          const gridEl  = document.getElementById('grid-' + map[key]);
+          if (!groupEl || !gridEl) return;
+          gridEl.innerHTML = list.map(cardHtml).join('');
+          groupEl.style.display = '';
+        });
+      })
+      .catch(err => console.error('Failed to load squad:', err));
+  })();
+</script>
 </body>
 </html>
