@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fixtures &amp; Results — Royal Classico FC</title>
+  <meta name="description" content="All upcoming fixtures and past results for Royal Classico FC — Sintkaing Football Club. EST. 2026."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+
+<!-- ══ NAVBAR ══════════════════════════════════════════════ -->
+<nav class="navbar">
+  <div class="navbar__inner">
+    <a href="/" class="navbar__brand">
+      <img th:src="@{/images/photo_2026-04-26_23-43-31.jpg}" alt="Royal Classico FC Crest" class="navbar__crest"/>
+      <span class="navbar__name">Royal Classico</span>
+    </a>
+    <ul class="navbar__links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/squad">Squad</a></li>
+      <li><a href="/news">News</a></li>
+      <li><a href="/fixtures" class="active">Fixtures</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ══ PAGE HERO ════════════════════════════════════════════ -->
+<section class="page-hero">
+  <div class="container">
+    <p class="page-hero__eyebrow">Season 2025 / 2026</p>
+    <h1>Fixtures &amp; <span class="gold">Results</span></h1>
+  </div>
+</section>
+
+<!-- ══ FIXTURES CONTENT ════════════════════════════════════ -->
+<section class="fixtures-section">
+  <div class="container">
+
+    <!-- Tab switcher -->
+    <div class="fixtures-tabs" id="fixtures-tabs">
+      <button class="fixtures-tab active" id="tab-upcoming" onclick="switchTab('upcoming')">Upcoming Matches</button>
+      <button class="fixtures-tab" id="tab-results" onclick="switchTab('results')">Past Results</button>
+    </div>
+
+    <!-- Upcoming Matches Table -->
+    <div id="panel-upcoming">
+      <div id="upcoming-content">
+        <div class="empty-state">
+          <div class="empty-state__icon">📅</div>
+          <p class="empty-state__text">Loading fixtures…</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Past Results Table -->
+    <div id="panel-results" style="display:none;">
+      <div id="results-content">
+        <div class="empty-state">
+          <div class="empty-state__icon">📋</div>
+          <p class="empty-state__text">Loading results…</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ FOOTER ══════════════════════════════════════════════ -->
+<footer>
+  <div class="container footer__inner">
+    <img th:src="@{/images/photo_2026-04-26_23-43-31.jpg}" alt="Royal Classico FC" class="footer__crest"/>
+    <div class="footer__brand">Royal Classico FC</div>
+    <p class="footer__est">Est. 2026 &mdash; Amateur Football Club</p>
+    <nav class="footer__links">
+      <a href="/">Home</a>
+      <a href="/squad">Squad</a>
+      <a href="/news">News</a>
+      <a href="/fixtures">Fixtures</a>
+    </nav>
+    <div class="footer__divider"></div>
+    <p class="footer__copy">
+      &copy; 2026 Royal Classico Football Club. All rights reserved.
+    </p>
+  </div>
+</footer>
+
+<script th:src="@{/js/main.js}"></script>
+<script>
+/* ── Fixtures Page ──────────────────────────────────────── */
+(function () {
+  let allFixtures = [];
+
+  function switchTab(tab) {
+    document.getElementById('tab-upcoming').classList.toggle('active', tab === 'upcoming');
+    document.getElementById('tab-results').classList.toggle('active', tab === 'results');
+    document.getElementById('panel-upcoming').style.display = tab === 'upcoming' ? '' : 'none';
+    document.getElementById('panel-results').style.display  = tab === 'results'  ? '' : 'none';
+  }
+
+  window.switchTab = switchTab;
+
+  function escHtml(str) {
+    return String(str || '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function resultBadgeClass(result) {
+    if (!result || result.toLowerCase() === 'vs') return '';
+    // Try to parse score like "2-1", "1-2", "1-1"
+    const m = result.match(/^(\d+)\s*[-:]\s*(\d+)$/);
+    if (m) {
+      const a = parseInt(m[1], 10), b = parseInt(m[2], 10);
+      if (a > b) return 'win';
+      if (a < b) return 'loss';
+      return 'draw';
+    }
+    return '';
+  }
+
+  function buildTable(fixtures, isFinished) {
+    if (!fixtures.length) {
+      return `<div class="empty-state">
+        <div class="empty-state__icon">${isFinished ? '📋' : '📅'}</div>
+        <p class="empty-state__text">${isFinished ? 'No results recorded yet.' : 'No upcoming fixtures announced.'}</p>
+      </div>`;
+    }
+    const rows = fixtures.map(f => {
+      const score   = (f.result && f.result !== 'vs') ? f.result : '—';
+      const badgeCls = resultBadgeClass(f.result);
+      const scorers = f.goalScorers ? `<div class="fixture-scorers">⚽ ${escHtml(f.goalScorers)}</div>` : '';
+      const resultCell = isFinished
+        ? `<span class="fixture-result-badge ${badgeCls}">${escHtml(score)}</span>${scorers}`
+        : `<span style="color:var(--clr-muted);font-size:0.8rem;">TBD</span>`;
+      return `<tr>
+        <td>${escHtml(f.date || '—')}</td>
+        <td>${escHtml(f.time || '—')}</td>
+        <td><strong>Royal Classico</strong></td>
+        <td style="text-align:center;">${resultCell}</td>
+        <td>${escHtml(f.rivalTeam || '—')}</td>
+        <td>${escHtml(f.stadium || '—')}</td>
+      </tr>`;
+    }).join('');
+
+    return `<div style="overflow-x:auto;">
+      <table class="fixtures-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Kick-off</th>
+            <th>Home</th>
+            <th style="text-align:center;">${isFinished ? 'Score' : 'Result'}</th>
+            <th>Away</th>
+            <th>Venue</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }
+
+  function render(fixtures) {
+    const upcoming = fixtures.filter(f => !f.finished);
+    const results  = fixtures.filter(f => f.finished);
+
+    document.getElementById('upcoming-content').innerHTML = buildTable(upcoming, false);
+    document.getElementById('results-content').innerHTML  = buildTable(results, true);
+  }
+
+  // Load from public API
+  fetch('/api/v1/public/fixtures')
+    .then(r => {
+      if (r.status === 204 || r.status === 404) return [];
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(data => {
+      // API may return a single fixture or an array
+      allFixtures = Array.isArray(data) ? data : (data ? [data] : []);
+      render(allFixtures);
+    })
+    .catch(err => {
+      console.error('Failed to load fixtures:', err);
+      document.getElementById('upcoming-content').innerHTML =
+        '<div class="empty-state"><div class="empty-state__icon">⚠️</div><p class="empty-state__text">Could not load fixtures. Please try again later.</p></div>';
+      document.getElementById('results-content').innerHTML =
+        '<div class="empty-state"><div class="empty-state__icon">⚠️</div><p class="empty-state__text">Could not load results. Please try again later.</p></div>';
+    });
+})();
+</script>
+</body>
+</html>
