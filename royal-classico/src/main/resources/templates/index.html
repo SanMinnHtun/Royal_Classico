@@ -15,15 +15,7 @@
 <nav class="navbar">
   <div class="navbar__inner">
     <a href="/" class="navbar__brand">
-      <!-- Uses logo.png if present, else falls back to inline SVG crest -->
-      <img th:src="@{/images/logo.svg}" alt="Royal Classico FC Crest" class="navbar__crest"
-           onerror="this.style.display='none'; this.nextElementSibling.style.display='block'"/>
-      <svg class="navbar__crest" style="display:none;" viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M100 8L188 38V120C188 172 148 210 100 232C52 210 12 172 12 120V38Z" fill="#001a3a" stroke="#C5A065" stroke-width="4"/>
-        <path d="M100 18L178 44V120C178 166 142 202 100 222C58 202 22 166 22 120V44Z" fill="#003366"/>
-        <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle"
-              fill="#C5A065" font-family="Georgia,serif" font-size="52" font-weight="bold">RC</text>
-      </svg>
+      <img th:src="@{/images/photo_2026-04-26_23-43-31.jpg}" alt="Royal Classico FC Crest" class="navbar__crest"/>
       <span class="navbar__name">Royal Classico</span>
     </a>
 
@@ -37,6 +29,7 @@
       <li><a href="/" class="active">Home</a></li>
       <li><a href="/squad">Squad</a></li>
       <li><a href="/news">News</a></li>
+      <li><a href="/fixtures">Fixtures</a></li>
     </ul>
   </div>
 </nav>
@@ -178,12 +171,14 @@
 <!-- ══ FOOTER ══════════════════════════════════════════════ -->
 <footer>
   <div class="container footer__inner">
+    <img th:src="@{/images/photo_2026-04-26_23-43-31.jpg}" alt="Royal Classico FC" class="footer__crest"/>
     <div class="footer__brand">Royal Classico FC</div>
     <p class="footer__est">Est. 2026 &mdash; Amateur Football Club</p>
     <nav class="footer__links">
       <a href="/">Home</a>
       <a href="/squad">Squad</a>
       <a href="/news">News</a>
+      <a href="/fixtures">Fixtures</a>
     </nav>
     <div class="footer__divider"></div>
     <p class="footer__copy">

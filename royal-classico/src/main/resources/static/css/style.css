@@ -105,19 +105,19 @@ section { padding: 5rem 0; }
   gap: 0.75rem;
 }
 
-/* Logo image (logo.png) — falls back to SVG crest */
+/* Club crest — high-detail photo with gold glow */
 .navbar__logo {
-  height: 60px;
+  height: 65px;
   width: auto;
   object-fit: contain;
-  filter: drop-shadow(0 0 8px rgba(197,160,101,0.5));
+  filter: drop-shadow(0 0 5px rgba(212,175,55,0.3));
 }
 
 .navbar__crest {
-  width: 44px;
-  height: 52px;
+  height: 65px;
+  width: auto;
   object-fit: contain;
-  filter: drop-shadow(0 0 8px rgba(197,160,101,0.5));
+  filter: drop-shadow(0 0 5px rgba(212,175,55,0.3));
 }
 
 .navbar__name {
@@ -136,7 +136,7 @@ section { padding: 5rem 0; }
 
 .navbar__links a {
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--clr-muted);
@@ -395,7 +395,7 @@ section { padding: 5rem 0; }
 
 .news-card {
   background: rgba(255,255,255,0.05);
-  border: 1px solid var(--clr-border);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: var(--radius-lg);
   overflow: hidden;
   transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
@@ -517,7 +517,7 @@ section { padding: 5rem 0; }
 /* ── Player Card — Shield Aesthetic ───────────────────────── */
 .player-card {
   background: rgba(255,255,255,0.05);
-  border: 1px solid var(--clr-border);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: var(--radius-lg) var(--radius-lg) 40% 40% / var(--radius-lg) var(--radius-lg) 20px 20px;
   overflow: hidden;
   text-align: center;
@@ -552,7 +552,7 @@ section { padding: 5rem 0; }
 .player-card__img-wrap {
   height: 240px;
   overflow: hidden;
-  background: #0a1128;
+  background: #0f172a;
   position: relative;
   z-index: 1;
   display: flex;
@@ -565,6 +565,7 @@ section { padding: 5rem 0; }
   object-fit: contain;
   object-position: center;
   transition: opacity 0.3s ease;
+  background: #0f172a;
 }
 .player-card:hover .player-card__img { opacity: 0.92; }
 
@@ -676,6 +677,14 @@ footer {
   gap: 1.5rem;
 }
 
+.footer__crest {
+  height: 65px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 5px rgba(212,175,55,0.3));
+  margin-bottom: 0.25rem;
+}
+
 .footer__brand {
   font-family: var(--ff-display);
   font-size: 1.6rem;
@@ -722,6 +731,50 @@ footer {
   background: var(--clr-border);
 }
 
+/* ── Fixtures Page ─────────────────────────────────────────── */
+.fixtures-section { padding: 5rem 0; }
+.fixtures-tabs {
+  display: flex; gap: 0.5rem; margin-bottom: 2rem;
+}
+.fixtures-tab {
+  padding: 0.5rem 1.25rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px; cursor: pointer;
+  color: var(--clr-muted); font-size: 0.8rem; font-weight: 500;
+  transition: var(--transition); font-family: var(--ff-body);
+}
+.fixtures-tab.active, .fixtures-tab:hover {
+  background: rgba(197,160,101,0.15);
+  border-color: var(--clr-gold-dim);
+  color: var(--clr-gold);
+}
+.fixtures-table {
+  width: 100%; border-collapse: collapse;
+}
+.fixtures-table th {
+  font-size: 0.68rem; font-weight: 500; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--clr-gold);
+  padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);
+  text-align: left;
+}
+.fixtures-table td {
+  padding: 1rem; font-size: 0.875rem; font-weight: 400;
+  color: var(--clr-text); border-bottom: 1px solid rgba(255,255,255,0.06);
+  vertical-align: middle;
+}
+.fixtures-table tr:hover td { background: rgba(255,255,255,0.03); }
+.fixture-result-badge {
+  display: inline-block; padding: 3px 10px;
+  border-radius: 12px; font-size: 0.75rem; font-weight: 500;
+  background: rgba(197,160,101,0.12);
+  border: 1px solid rgba(197,160,101,0.3); color: var(--clr-gold);
+}
+.fixture-result-badge.win  { background: rgba(34,197,94,0.12);  border-color: rgba(34,197,94,0.3);  color: #22c55e; }
+.fixture-result-badge.loss { background: rgba(239,68,68,0.12);  border-color: rgba(239,68,68,0.3);  color: #ef4444; }
+.fixture-result-badge.draw { background: rgba(234,179,8,0.12);  border-color: rgba(234,179,8,0.3);  color: #eab308; }
+.fixture-scorers { font-size: 0.75rem; color: var(--clr-muted); margin-top: 3px; }
+
 /* ── Buttons ───────────────────────────────────────────────── */
 .btn {
   display: inline-flex;
@@ -729,7 +782,7 @@ footer {
   gap: 0.5rem;
   padding: 0.75rem 1.75rem;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   border: 2px solid transparent;

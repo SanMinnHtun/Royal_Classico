@@ -73,7 +73,9 @@ public class ManagementApiController {
 
         try {
             // Self-healing: ensure uploads/players directory exists before saving
-            Files.createDirectories(Paths.get("uploads/players"));
+            Files.createDirectories(Paths.get("uploads", "players"));
+            Files.createDirectories(Paths.get("uploads", "fixtures"));
+            Files.createDirectories(Paths.get("uploads", "news"));
 
             Player p = new Player();
             p.setName(name);
@@ -114,8 +116,8 @@ public class ManagementApiController {
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .body("Failed to write uploaded file: " + ioe.getMessage());
                 }
-                // Save ONLY the web-relative path
-                p.setImagePath("/uploads/players/" + fileName);
+                // Save web-relative path relative to application root (uploads are served from filesystem root)
+                p.setImagePath("players/" + fileName);
             }
 
             Player saved = playerRepository.save(p);
@@ -177,6 +179,8 @@ public class ManagementApiController {
     ) {
         System.out.println("[ManagementApiController] POST /news — title=" + title + ", hasImage=" + (image != null && !image.isEmpty()));
         try {
+            // Self-healing: ensure uploads/news directory exists
+            Files.createDirectories(Paths.get("uploads", "news"));
             NewsPost n = new NewsPost();
             n.setTitle(title);
             n.setContent(content);

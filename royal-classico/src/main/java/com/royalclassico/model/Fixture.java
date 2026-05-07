@@ -40,4 +40,10 @@ public class Fixture {
 
     /** True once the match has been played and a result is recorded */
     private boolean isFinished = false;
+
+    /**
+     * Optional: goal scorer names and times, e.g. "Aung Ko (23'), Zaw Min (67')"
+     * Shown on the fixtures page under past results.
+     */
+    private String goalScorers;
 }
