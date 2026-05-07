@@ -70,4 +70,17 @@ public class PublicApiController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.noContent().build());
     }
+
+    /**
+     * GET /api/v1/public/fixtures
+     * Returns all fixtures as a list (currently wraps the single fixture entry).
+     * Returns empty array if no fixture is set.
+     */
+    @GetMapping("/fixtures")
+    public ResponseEntity<java.util.List<Fixture>> getAllFixtures() {
+        System.out.println("[PublicApiController] GET /fixtures");
+        return fixtureService.getNextFixture()
+                .map(f -> ResponseEntity.ok(java.util.List.of(f)))
+                .orElse(ResponseEntity.ok(java.util.List.of()));
+    }
 }

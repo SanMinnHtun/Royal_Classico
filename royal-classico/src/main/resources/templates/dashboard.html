@@ -179,8 +179,19 @@
       </div>
       <div style="display:flex;align-items:flex-end;">
         <label style="display:flex;gap:6px;align-items:center;font-size:0.85rem;cursor:pointer;">
-          <input type="checkbox" id="f_finished"/> Match Finished
+          <input type="checkbox" id="f_finished" onchange="toggleFinishedFields(this.checked)"/> Match Finished
         </label>
+      </div>
+      <!-- Finished fields — revealed when "Match Finished" is checked -->
+      <div class="full" id="finished-fields" style="display:none; grid-template-columns:1fr 1fr; gap:0.75rem;">
+        <div>
+          <div class="field-label">Full-Time Score (e.g. 2-1)</div>
+          <input id="f_ftScore" placeholder="e.g. 2-1"/>
+        </div>
+        <div>
+          <div class="field-label">Goal Scorers</div>
+          <input id="f_goalScorers" placeholder="e.g. Aung Ko (23'), Zaw Min (67')"/>
+        </div>
       </div>
       <div class="full btn-row">
         <button type="submit" class="btn btn-gold">💾 Save Fixture</button>
@@ -415,9 +426,15 @@
       .catch(err => alert('Error: ' + err.message));
   }
 
+  /* ── Toggle finished fields ───────────────────────────── */
+  function toggleFinishedFields(checked) {
+    const el = document.getElementById('finished-fields');
+    if (el) el.style.display = checked ? 'grid' : 'none';
+  }
+
   /* ── Fixture ─────────────────────────────────────── */
   function loadFixture() {
-    fetch(FIXTURE_API, { headers: HEADERS })
+    fetch('/api/v1/rc-internal-mgmt/fixture', { headers: HEADERS })
       .then(r => { if (r.status === 404 || r.status === 204) return null; return r.json(); })
       .then(f => {
         const display = document.getElementById('fixtureDisplay');
@@ -430,7 +447,15 @@
           document.getElementById('f_date').value    = f.date || '';
           document.getElementById('f_time').value    = f.time || '';
           document.getElementById('f_result').value  = f.result || 'vs';
-          document.getElementById('f_finished').checked = f.finished || false;
+          const fin = f.finished || f.isFinished || false;
+          document.getElementById('f_finished').checked = fin;
+          toggleFinishedFields(fin);
+          if (document.getElementById('f_ftScore') && f.result && f.result !== 'vs') {
+            document.getElementById('f_ftScore').value = f.result;
+          }
+          if (document.getElementById('f_goalScorers') && f.goalScorers) {
+            document.getElementById('f_goalScorers').value = f.goalScorers;
+          }
         } else {
           display.style.display = 'none';
         }
@@ -440,13 +465,16 @@
 
   function saveFixture(event) {
     event.preventDefault();
+    const finished = document.getElementById('f_finished').checked;
+    const ftScore  = document.getElementById('f_ftScore') ? document.getElementById('f_ftScore').value.trim() : '';
     const body = {
-      rivalTeam:  document.getElementById('f_rival').value.trim(),
-      stadium:    document.getElementById('f_stadium').value.trim(),
-      date:       document.getElementById('f_date').value,
-      time:       document.getElementById('f_time').value,
-      result:     document.getElementById('f_result').value.trim() || 'vs',
-      isFinished: document.getElementById('f_finished').checked
+      rivalTeam:    document.getElementById('f_rival').value.trim(),
+      stadium:      document.getElementById('f_stadium').value.trim(),
+      date:         document.getElementById('f_date').value,
+      time:         document.getElementById('f_time').value,
+      result:       finished && ftScore ? ftScore : (document.getElementById('f_result').value.trim() || 'vs'),
+      isFinished:   finished,
+      goalScorers:  document.getElementById('f_goalScorers') ? document.getElementById('f_goalScorers').value.trim() : ''
     };
     if (!body.rivalTeam || !body.date || !body.time) { alert('Rival team, date and time are required.'); return; }
 

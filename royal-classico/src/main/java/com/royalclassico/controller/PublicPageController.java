@@ -47,4 +47,12 @@ public class PublicPageController {
         model.addAttribute("nextFixture", fixtureService.getNextFixture().orElse(null));
         return "news";
     }
+
+    /** Fixtures & Results page */
+    @GetMapping("/fixtures")
+    public String fixtures(Model model) {
+        System.out.println("[PublicPageController] GET /fixtures");
+        model.addAttribute("nextFixture", fixtureService.getNextFixture().orElse(null));
+        return "fixtures";
+    }
 }

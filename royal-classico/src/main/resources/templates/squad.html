@@ -8,6 +8,23 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link rel="stylesheet" th:href="@{/css/style.css}"/>
+  <style>
+    /* Squad overrides to ensure 4 cards per row, image contain and dark image backdrop */
+    .players-grid { display:grid; grid-template-columns: repeat(4, 1fr); gap:1.25rem; }
+    .player-card { background: linear-gradient(180deg, rgba(3,10,28,0.6), rgba(3,10,28,0.45)); border-radius:10px; overflow:hidden; box-shadow: 0 6px 18px rgba(2,6,20,0.35); border:1px solid rgba(197,160,101,0.06); display:flex; flex-direction:column; }
+    .player-card__img-wrap { position:relative; height:190px; background:#081028; display:flex;align-items:center;justify-content:center; }
+    .player-card__img { width:100%; height:100%; object-fit:contain; display:block; }
+    .player-card__img-placeholder { font-size:42px; color:#9aa7c8; display:flex; align-items:center; justify-content:center; height:100%; width:100%; }
+    .player-card__number { position:absolute; left:14px; top:14px; font-size:28px; font-weight:600; color:#C5A065; }
+    .player-card__body { padding:14px; color:#dfe7f7; }
+    .player-card__name { font-size:16px; font-weight:600; margin-bottom:6px; }
+    .pc-jersey-name { font-size:13px; color:#b8c6e6; margin-bottom:4px; }
+    .pc-age { font-size:13px; color:#9fb0d6; margin-bottom:8px; }
+    .player-card__pos { background:rgba(197,160,101,0.08); color:#C5A065; padding:6px 8px; border-radius:16px; font-size:12px; margin-right:6px; }
+    @media (max-width:1100px){ .players-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width:800px){ .players-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width:480px){ .players-grid { grid-template-columns: 1fr; } }
+  </style>
 </head>
 <body>
 
@@ -15,8 +32,7 @@
 <nav class="navbar">
   <div class="navbar__inner">
     <a href="/" class="navbar__brand">
-      <img th:src="@{/images/logo.svg}" alt="Royal Classico FC Crest" class="navbar__crest"
-           onerror="this.style.display='none'; this.nextElementSibling.style.display='block'"/>
+      <img th:src="@{/images/photo_2026-04-26_23-43-31.jpg}" alt="Royal Classico FC Crest" class="navbar__crest" style="height:60px;object-fit:contain;"/>
       <svg class="navbar__crest" style="display:none;" viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M100 8L188 38V120C188 172 148 210 100 232C52 210 12 172 12 120V38Z" fill="#001a3a" stroke="#C5A065" stroke-width="4"/>
         <path d="M100 18L178 44V120C178 166 142 202 100 222C58 202 22 166 22 120V44Z" fill="#003366"/>
@@ -142,37 +158,60 @@
         .replace(/"/g, '&quot;');
     }
 
+    function resolveImgPath(pth) {
+      if (!pth) return '';
+      // If it's already a web path starting with / or http(s), use it
+      if (pth.startsWith('/') || pth.startsWith('http')) {
+        // If path starts with /uploads/players/... convert to /players/...
+        if (pth.startsWith('/uploads/')) return '/' + pth.replace(/^\/uploads\//, '');
+        return pth;
+      }
+
+      // Windows absolute path e.g. C:\...\uploads\players\file.jpg
+      // Extract filename if present
+      var winMatch = pth.match(/([^\\\/]+\.(jpe?g|png|webp|gif))$/i);
+      if (winMatch) return '/players/' + winMatch[1];
+
+      // If contains uploads/players or uploads\\players, normalize
+      var cleaned = pth.replace(/\\/g, '/');
+      cleaned = cleaned.replace(/^\/*uploads\//, '');
+      // remove any leading slashes and return root-relative path
+      cleaned = cleaned.replace(/^\/+/, '');
+      return '/' + cleaned;
+    }
+
     function cardHtml(p) {
       const positions = (p.positions && p.positions.length) ? p.positions : [];
       const primaryPos = positions.length ? positions[0].toUpperCase() : 'OTHER';
-      const imgSrc = p.imagePath || '';
+      const rawImg = p.imagePath || '';
+      const imgUrl = resolveImgPath(rawImg);
 
-      // Image or emoji placeholder
-      const imgTag = imgSrc
-        ? `<img src="${imgSrc}" alt="${escHtml(p.name || '')}" class="player-card__img"
-               onerror="this.style.display='none';this.parentElement.querySelector('.player-card__img-placeholder').style.display='flex'">
-           <div class="player-card__img-placeholder" style="display:none;">${EMOJI[primaryPos] || '👤'}</div>`
-        : `<div class="player-card__img-placeholder">${EMOJI[primaryPos] || '👤'}</div>`;
+      // Image or emoji placeholder; onerror swaps to a default image (keeps element visible)
+      const imgTag = imgUrl
+        ? `<div class="player-card__img-wrap">
+             <img src="${imgUrl}" alt="${escHtml(p.name || '')}" class="player-card__img"
+               onerror="this.onerror=null; this.src='/images/photo_2026-04-26_23-43-31.jpg'; this.style.objectFit='contain';" />
+             <div class="player-card__img-placeholder" style="display:none;">${EMOJI[primaryPos] || '👤'}</div>
+             <span class="player-card__number">${p.jerseyNumber != null ? escHtml(p.jerseyNumber) : ''}</span>
+           </div>`
+        : `<div class="player-card__img-wrap">
+             <div class="player-card__img-placeholder">${EMOJI[primaryPos] || '👤'}</div>
+             <span class="player-card__number">${p.jerseyNumber != null ? escHtml(p.jerseyNumber) : ''}</span>
+           </div>`;
 
-      // All positions as badges
       const posBadges = positions.length
         ? positions.map(pos => `<span class="player-card__pos">${escHtml(pos)}</span>`).join(' ')
         : '<span class="player-card__pos">—</span>';
 
-      // Jersey name line (only if different from name)
       const jerseyLine = (p.jerseyName && p.jerseyName !== p.name)
         ? `<p class="pc-jersey-name">${escHtml(p.jerseyName)}</p>` : '';
 
-      // Age line
       const ageLine = p.age
-        ? `<p class="pc-age">Age ${p.age}</p>` : '';
+        ? `<p class="pc-age">Age ${escHtml(p.age)}</p>` : '';
 
       return `
         <div class="player-card">
-          <div class="player-card__img-wrap">
-            ${imgTag}
-            <span class="player-card__number">${p.jerseyNumber != null ? p.jerseyNumber : ''}</span>
-          </div>
+          ${imgTag}
           <div class="player-card__body">
             <p class="player-card__name">${escHtml(p.name || 'Player')}</p>
             ${jerseyLine}
@@ -183,7 +222,7 @@
     }
 
     fetch('/api/v1/public/squad')
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(players => {
         const groups = { GK: [], DEF: [], MID: [], FWD: [], OTHER: [] };
         players.forEach(p => {
