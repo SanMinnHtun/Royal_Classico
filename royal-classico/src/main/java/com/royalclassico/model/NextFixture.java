@@ -7,35 +7,23 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Multi-entry model for fixtures. Each save() creates a new document (unique id).
+ * Single-document model for the next fixture banner.
+ * Keeps the same fields as Fixture but stored in its own collection `next_fixture`.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "fixtures")
-public class Fixture {
-
+@Document(collection = "next_fixture")
+public class NextFixture {
     @Id
     private String id;
 
-    /** The rival team name */
     private String rivalTeam;
-
-    /** Match date as a plain string, e.g. "2026-06-15" */
     private String date;
-
-    /** Kick-off time as a plain string, e.g. "15:00" */
     private String time;
-
-    /** Stadium / venue name */
     private String stadium;
-
-    /** Result display string — defaults to "vs" before the match. */
     private String result = "vs";
-
-    /** True once the match has been played and a result is recorded */
     private boolean isFinished = false;
-
-    /** Optional: goal scorer names and times */
     private String goalScorers;
 }
+
