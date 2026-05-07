@@ -32,7 +32,7 @@
 <nav class="navbar">
   <div class="navbar__inner">
     <a href="/" class="navbar__brand">
-      <img th:src="@{/images/photo_2026-04-26_23-43-31.jpg}" alt="Royal Classico FC Crest" class="navbar__crest" style="height:60px;object-fit:contain;"/>
+      <img th:src="@{/images/logo.png}" alt="Royal Classico FC Logo" class="navbar__crest" style="height:60px;object-fit:contain;"/>
       <svg class="navbar__crest" style="display:none;" viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M100 8L188 38V120C188 172 148 210 100 232C52 210 12 172 12 120V38Z" fill="#001a3a" stroke="#C5A065" stroke-width="4"/>
         <path d="M100 18L178 44V120C178 166 142 202 100 222C58 202 22 166 22 120V44Z" fill="#003366"/>
@@ -160,24 +160,26 @@
 
     function resolveImgPath(pth) {
       if (!pth) return '';
-      // If it's already a web path starting with / or http(s), use it
-      if (pth.startsWith('/') || pth.startsWith('http')) {
-        // If path starts with /uploads/players/... convert to /players/...
-        if (pth.startsWith('/uploads/')) return '/' + pth.replace(/^\/uploads\//, '');
-        return pth;
+      // If it's already a full web path (absolute or http), use it as-is
+      if (pth.startsWith('http://') || pth.startsWith('https://')) return pth;
+      // If already rooted under /uploads, return unchanged
+      if (pth.startsWith('/uploads/')) return pth;
+      // If it's already a root-relative path like /players/..., map it under /uploads/
+      if (pth.startsWith('/')) {
+        return '/uploads' + pth; // e.g. /players/foo.jpg -> /uploads/players/foo.jpg
       }
 
       // Windows absolute path e.g. C:\...\uploads\players\file.jpg
-      // Extract filename if present
+      // Extract filename if present and map to /uploads/players/<filename>
       var winMatch = pth.match(/([^\\\/]+\.(jpe?g|png|webp|gif))$/i);
-      if (winMatch) return '/players/' + winMatch[1];
+      if (winMatch) return '/uploads/players/' + winMatch[1];
 
-      // If contains uploads/players or uploads\\players, normalize
+      // Normalize any relative path: remove backslashes, trim leading uploads/, and prefix with /uploads/
       var cleaned = pth.replace(/\\/g, '/');
-      cleaned = cleaned.replace(/^\/*uploads\//, '');
-      // remove any leading slashes and return root-relative path
+      cleaned = cleaned.replace(/^\/*uploads\//i, '');
       cleaned = cleaned.replace(/^\/+/, '');
-      return '/' + cleaned;
+      if (!cleaned) return '';
+      return '/uploads/' + cleaned;
     }
 
     function cardHtml(p) {
