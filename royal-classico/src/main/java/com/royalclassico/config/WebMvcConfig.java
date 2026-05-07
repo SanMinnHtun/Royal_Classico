@@ -20,15 +20,24 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         String absolutePath = Paths.get(uploadDir).toAbsolutePath().normalize().toUri().toString();
 
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:./uploads/");
-
-        // Also expose a friendly /images/** mapping for templates to use
+        // Serve images packaged in the classpath first (src/main/resources/static/images)
         registry.addResourceHandler("/images/**")
-                .addResourceLocations(absolutePath);
+                .addResourceLocations("classpath:/static/images/")
+                .setCachePeriod(3600);
 
-        // Serve static classpath resources (CSS, JS, fonts, etc.)
+        // Expose uploads (user-generated content) under /uploads/** mapping
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:./uploads/")
+                .setCachePeriod(3600);
+
+        // For backwards compatibility, also allow a fallback /images/** mapping to the uploads folder
+        registry.addResourceHandler("/images/uploads/**")
+                .addResourceLocations(absolutePath)
+                .setCachePeriod(3600);
+
+        // Serve static classpath resources (CSS, JS, fonts, etc.) under /static/**
         registry.addResourceHandler("/static/**")
-                .addResourceLocations("classpath:/static/");
+                .addResourceLocations("classpath:/static/")
+                .setCachePeriod(3600);
     }
 }
