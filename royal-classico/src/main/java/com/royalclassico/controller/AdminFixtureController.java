@@ -3,16 +3,17 @@ package com.royalclassico.controller;
 import com.royalclassico.model.Fixture;
 import com.royalclassico.service.FixtureService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * Secret Admin REST API for Next Fixture management.
- *
- * Base path: /api/v1/rc-internal-mgmt/fixture
- * Auth:       X-Admin-Secret header (enforced by AdminSecurityFilter)
- *
- * Single-entry pattern — only one fixture can exist at a time.
+ * Admin REST API for multi-entry fixture management.
+ * Provides endpoints to create, update, list, and delete fixtures.
+ * The banner endpoint only returns the next upcoming (not finished) fixture.
  */
 @RestController
 @RequestMapping("/api/v1/rc-internal-mgmt/fixture")
@@ -21,47 +22,102 @@ public class AdminFixtureController {
 
     private final FixtureService fixtureService;
 
-    /** GET the current fixture */
-    @GetMapping
-    public ResponseEntity<Fixture> getFixture() {
-        System.out.println("[AdminFixtureController] GET /fixture");
-        return fixtureService.getNextFixture()
+    /**
+     * GET /banner — returns the next upcoming fixture (ignores finished matches)
+     */
+    @GetMapping("/banner")
+    public ResponseEntity<Fixture> getBanner() {
+        System.out.println("[AdminFixtureController] GET /fixture/banner");
+        return fixtureService.getNextUpcomingFixture()
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     /**
-     * PUT — Create or replace the next fixture.
-     * Body (JSON):
-     * {
-     *   "rivalTeam": "FC Rivals",
-     *   "date":      "2026-06-15",
-     *   "time":      "15:00",
-     *   "stadium":   "Municipal Stadium, Field 3",
-     *   "result":    "vs",
-     *   "isFinished": false
-     * }
+     * GET /upcoming — returns all upcoming (isFinished == false) fixtures
      */
-    @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> upsertFixture(@RequestBody Fixture fixture) {
-        System.out.println("[AdminFixtureController] PUT /fixture — rivalTeam=" + fixture.getRivalTeam()
-                + ", date=" + fixture.getDate() + ", time=" + fixture.getTime()
-                + ", stadium=" + fixture.getStadium());
+    @GetMapping("/upcoming")
+    public ResponseEntity<List<Fixture>> getUpcoming() {
+        System.out.println("[AdminFixtureController] GET /fixture/upcoming");
+        return ResponseEntity.ok(fixtureService.getUpcomingFixtures());
+    }
+
+    /**
+     * GET /past — returns all past (isFinished == true) fixtures
+     */
+    @GetMapping("/past")
+    public ResponseEntity<List<Fixture>> getPast() {
+        System.out.println("[AdminFixtureController] GET /fixture/past");
+        return ResponseEntity.ok(fixtureService.getPastFixtures());
+    }
+
+    /**
+     * GET /all — returns upcoming followed by past fixtures
+     */
+    @GetMapping("/all")
+    public ResponseEntity<List<Fixture>> getAllFixtures() {
+        System.out.println("[AdminFixtureController] GET /fixture/all");
+        List<Fixture> combined = new ArrayList<>();
+        combined.addAll(fixtureService.getUpcomingFixtures());
+        combined.addAll(fixtureService.getPastFixtures());
+        return ResponseEntity.ok(combined);
+    }
+
+    /**
+     * POST / — create a new fixture. Ensure ID is null so MongoDB generates a new one.
+     */
+    @PostMapping(consumes = "application/json")
+    public ResponseEntity<Fixture> createFixture(@RequestBody Fixture fixture) {
+        System.out.println("[AdminFixtureController] POST /fixture — create");
         try {
-            Fixture saved = fixtureService.upsertFixture(fixture);
-            System.out.println("[AdminFixtureController] Fixture saved id=" + saved.getId());
-            return ResponseEntity.ok(saved);
+            // Build a new Fixture instance to avoid any client-provided id or accidental overwrite
+            Fixture toSave = new Fixture();
+            toSave.setId(null);
+            toSave.setRivalTeam(fixture.getRivalTeam());
+            toSave.setDate(fixture.getDate());
+            toSave.setTime(fixture.getTime());
+            toSave.setStadium(fixture.getStadium());
+            toSave.setResult(fixture.getResult() != null ? fixture.getResult() : "vs");
+            toSave.setFinished(fixture.isFinished());
+            toSave.setGoalScorers(fixture.getGoalScorers());
+            Fixture saved = fixtureService.saveAndSyncNext(toSave);
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
         } catch (Exception e) {
-            System.err.println("[AdminFixtureController] ERROR: " + e.getMessage());
-            return ResponseEntity.badRequest().body("Invalid fixture data: " + e.getMessage());
+            System.err.println("[AdminFixtureController] ERROR create: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
-    /** DELETE — Clear the upcoming fixture (e.g., match is done) */
-    @DeleteMapping
-    public ResponseEntity<Void> deleteFixture() {
-        System.out.println("[AdminFixtureController] DELETE /fixture");
-        fixtureService.deleteFixture();
-        return ResponseEntity.noContent().build();
+    /**
+     * PUT / — update an existing fixture. Requires fixture.id to be present.
+     */
+    @PutMapping(consumes = "application/json")
+    public ResponseEntity<Fixture> updateFixture(@RequestBody Fixture fixture) {
+        System.out.println("[AdminFixtureController] PUT /fixture — update id=" + fixture.getId());
+        if (fixture.getId() == null || fixture.getId().isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        try {
+            Fixture updated = fixtureService.updateFixture(fixture);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            System.err.println("[AdminFixtureController] ERROR update: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    /**
+     * DELETE /{id} — delete a fixture by id
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteFixture(@PathVariable String id) {
+        System.out.println("[AdminFixtureController] DELETE /fixture/" + id);
+        try {
+            fixtureService.deleteFixtureById(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            System.err.println("[AdminFixtureController] ERROR delete: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

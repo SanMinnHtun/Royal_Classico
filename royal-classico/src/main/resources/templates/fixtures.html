@@ -48,9 +48,37 @@
     <!-- Upcoming Matches Table -->
     <div id="panel-upcoming">
       <div id="upcoming-content">
-        <div class="empty-state">
-          <div class="empty-state__icon">📅</div>
-          <p class="empty-state__text">Loading fixtures…</p>
+        <div style="overflow-x:auto;">
+          <table class="fixtures-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Kick-off</th>
+                <th>Home</th>
+                <th>Result</th>
+                <th>Away</th>
+                <th>Venue</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="match : ${upcomingMatches}">
+                <td th:text="${match.date}">2026-06-15</td>
+                <td th:text="${match.time}">15:00</td>
+                <td><strong>Royal Classico</strong></td>
+                <td style="text-align:center;"> <span th:text="${match.result != null and !match.isFinished ? 'TBD' : (match.result != null ? match.result : '—')}">TBD</span> </td>
+                <td th:text="${match.rivalTeam}">Rival</td>
+                <td th:text="${match.stadium}">Stadium</td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(upcomingMatches)}">
+                <td colspan="6">
+                  <div class="empty-state">
+                    <div class="empty-state__icon">📅</div>
+                    <p class="empty-state__text">No upcoming fixtures announced.</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -58,9 +86,40 @@
     <!-- Past Results Table -->
     <div id="panel-results" style="display:none;">
       <div id="results-content">
-        <div class="empty-state">
-          <div class="empty-state__icon">📋</div>
-          <p class="empty-state__text">Loading results…</p>
+        <div style="overflow-x:auto;">
+          <table class="fixtures-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Kick-off</th>
+                <th>Home</th>
+                <th>Score</th>
+                <th>Away</th>
+                <th>Venue</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="match : ${pastResults}">
+                <td th:text="${match.date}">2026-06-01</td>
+                <td th:text="${match.time}">14:00</td>
+                <td><strong>Royal Classico</strong></td>
+                <td style="text-align:center;">
+                  <span th:text="${match.result != null ? match.result : '—'}">2-1</span>
+                  <div th:if="${match.goalScorers}" class="fixture-scorers">⚽ <span th:text="${match.goalScorers}">Aung Ko</span></div>
+                </td>
+                <td th:text="${match.rivalTeam}">Rivals</td>
+                <td th:text="${match.stadium}">Stadium</td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(pastResults)}">
+                <td colspan="6">
+                  <div class="empty-state">
+                    <div class="empty-state__icon">📋</div>
+                    <p class="empty-state__text">No results recorded yet.</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -89,106 +148,14 @@
 
 <script th:src="@{/js/main.js}"></script>
 <script>
-/* ── Fixtures Page ──────────────────────────────────────── */
-(function () {
-  let allFixtures = [];
-
+  // Minimal page script: tab switching handled client-side
   function switchTab(tab) {
     document.getElementById('tab-upcoming').classList.toggle('active', tab === 'upcoming');
     document.getElementById('tab-results').classList.toggle('active', tab === 'results');
     document.getElementById('panel-upcoming').style.display = tab === 'upcoming' ? '' : 'none';
     document.getElementById('panel-results').style.display  = tab === 'results'  ? '' : 'none';
   }
-
   window.switchTab = switchTab;
-
-  function escHtml(str) {
-    return String(str || '')
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function resultBadgeClass(result) {
-    if (!result || result.toLowerCase() === 'vs') return '';
-    // Try to parse score like "2-1", "1-2", "1-1"
-    const m = result.match(/^(\d+)\s*[-:]\s*(\d+)$/);
-    if (m) {
-      const a = parseInt(m[1], 10), b = parseInt(m[2], 10);
-      if (a > b) return 'win';
-      if (a < b) return 'loss';
-      return 'draw';
-    }
-    return '';
-  }
-
-  function buildTable(fixtures, isFinished) {
-    if (!fixtures.length) {
-      return `<div class="empty-state">
-        <div class="empty-state__icon">${isFinished ? '📋' : '📅'}</div>
-        <p class="empty-state__text">${isFinished ? 'No results recorded yet.' : 'No upcoming fixtures announced.'}</p>
-      </div>`;
-    }
-    const rows = fixtures.map(f => {
-      const score   = (f.result && f.result !== 'vs') ? f.result : '—';
-      const badgeCls = resultBadgeClass(f.result);
-      const scorers = f.goalScorers ? `<div class="fixture-scorers">⚽ ${escHtml(f.goalScorers)}</div>` : '';
-      const resultCell = isFinished
-        ? `<span class="fixture-result-badge ${badgeCls}">${escHtml(score)}</span>${scorers}`
-        : `<span style="color:var(--clr-muted);font-size:0.8rem;">TBD</span>`;
-      return `<tr>
-        <td>${escHtml(f.date || '—')}</td>
-        <td>${escHtml(f.time || '—')}</td>
-        <td><strong>Royal Classico</strong></td>
-        <td style="text-align:center;">${resultCell}</td>
-        <td>${escHtml(f.rivalTeam || '—')}</td>
-        <td>${escHtml(f.stadium || '—')}</td>
-      </tr>`;
-    }).join('');
-
-    return `<div style="overflow-x:auto;">
-      <table class="fixtures-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Kick-off</th>
-            <th>Home</th>
-            <th style="text-align:center;">${isFinished ? 'Score' : 'Result'}</th>
-            <th>Away</th>
-            <th>Venue</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
-  }
-
-  function render(fixtures) {
-    const upcoming = fixtures.filter(f => !f.finished);
-    const results  = fixtures.filter(f => f.finished);
-
-    document.getElementById('upcoming-content').innerHTML = buildTable(upcoming, false);
-    document.getElementById('results-content').innerHTML  = buildTable(results, true);
-  }
-
-  // Load from public API
-  fetch('/api/v1/public/fixtures')
-    .then(r => {
-      if (r.status === 204 || r.status === 404) return [];
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
-    .then(data => {
-      // API may return a single fixture or an array
-      allFixtures = Array.isArray(data) ? data : (data ? [data] : []);
-      render(allFixtures);
-    })
-    .catch(err => {
-      console.error('Failed to load fixtures:', err);
-      document.getElementById('upcoming-content').innerHTML =
-        '<div class="empty-state"><div class="empty-state__icon">⚠️</div><p class="empty-state__text">Could not load fixtures. Please try again later.</p></div>';
-      document.getElementById('results-content').innerHTML =
-        '<div class="empty-state"><div class="empty-state__icon">⚠️</div><p class="empty-state__text">Could not load results. Please try again later.</p></div>';
-    });
-})();
 </script>
 </body>
 </html>

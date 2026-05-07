@@ -60,27 +60,47 @@ public class PublicApiController {
     // ── Fixture ───────────────────────────────────────────────────────
 
     /**
-     * GET /api/v1/public/fixture
-     * Returns the upcoming match fixture, or 204 No Content if none is set.
+     * GET /api/v1/public/fixture/banner
+     * Returns the closest upcoming match fixture, or 204 No Content if none is set.
      */
-    @GetMapping("/fixture")
-    public ResponseEntity<Fixture> getNextFixture() {
-        System.out.println("[PublicApiController] GET /fixture");
-        return fixtureService.getNextFixture()
+    @GetMapping("/fixture/banner")
+    public ResponseEntity<Fixture> getBannerFixture() {
+        System.out.println("[PublicApiController] GET /fixture/banner");
+        return fixtureService.getNextUpcomingFixture()
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.noContent().build());
     }
 
     /**
+     * GET /api/v1/public/fixtures/upcoming
+     * Returns upcoming fixtures (isFinished == false) ordered by date asc.
+     */
+    @GetMapping("/fixtures/upcoming")
+    public ResponseEntity<List<Fixture>> getUpcomingFixtures() {
+        System.out.println("[PublicApiController] GET /fixtures/upcoming");
+        return ResponseEntity.ok(fixtureService.getUpcomingFixtures());
+    }
+
+    /**
+     * GET /api/v1/public/fixtures/past
+     * Returns past fixtures (isFinished == true) ordered by date desc.
+     */
+    @GetMapping("/fixtures/past")
+    public ResponseEntity<List<Fixture>> getPastFixtures() {
+        System.out.println("[PublicApiController] GET /fixtures/past");
+        return ResponseEntity.ok(fixtureService.getPastFixtures());
+    }
+
+    /**
      * GET /api/v1/public/fixtures
-     * Returns all fixtures as a list (currently wraps the single fixture entry).
-     * Returns empty array if no fixture is set.
+     * Returns all fixtures (upcoming then past)
      */
     @GetMapping("/fixtures")
-    public ResponseEntity<java.util.List<Fixture>> getAllFixtures() {
+    public ResponseEntity<List<Fixture>> getAllFixtures() {
         System.out.println("[PublicApiController] GET /fixtures");
-        return fixtureService.getNextFixture()
-                .map(f -> ResponseEntity.ok(java.util.List.of(f)))
-                .orElse(ResponseEntity.ok(java.util.List.of()));
+        List<Fixture> upcoming = fixtureService.getUpcomingFixtures();
+        List<Fixture> past = fixtureService.getPastFixtures();
+        upcoming.addAll(past);
+        return ResponseEntity.ok(upcoming);
     }
 }

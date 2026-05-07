@@ -433,8 +433,9 @@
   }
 
   /* ── Fixture ─────────────────────────────────────── */
-  function loadFixture() {
-    fetch('/api/v1/rc-internal-mgmt/fixture', { headers: HEADERS })
+  // Load banner fixture (closest upcoming) and populate the banner area + fixture form defaults
+  function loadBannerFixture() {
+    fetch(FIXTURE_API + '/banner', { headers: HEADERS })
       .then(r => { if (r.status === 404 || r.status === 204) return null; return r.json(); })
       .then(f => {
         const display = document.getElementById('fixtureDisplay');
@@ -442,20 +443,6 @@
           document.getElementById('fc-match').textContent = 'Royal Classico ' + (f.result || 'vs') + ' ' + f.rivalTeam;
           document.getElementById('fc-meta').textContent = (f.date || '') + ' · ' + (f.time || '') + ' · ' + (f.stadium || '');
           display.style.display = 'flex';
-          document.getElementById('f_rival').value   = f.rivalTeam || '';
-          document.getElementById('f_stadium').value = f.stadium || '';
-          document.getElementById('f_date').value    = f.date || '';
-          document.getElementById('f_time').value    = f.time || '';
-          document.getElementById('f_result').value  = f.result || 'vs';
-          const fin = f.finished || f.isFinished || false;
-          document.getElementById('f_finished').checked = fin;
-          toggleFinishedFields(fin);
-          if (document.getElementById('f_ftScore') && f.result && f.result !== 'vs') {
-            document.getElementById('f_ftScore').value = f.result;
-          }
-          if (document.getElementById('f_goalScorers') && f.goalScorers) {
-            document.getElementById('f_goalScorers').value = f.goalScorers;
-          }
         } else {
           display.style.display = 'none';
         }
@@ -463,11 +450,46 @@
       .catch(() => document.getElementById('fixtureDisplay').style.display = 'none');
   }
 
+  // Manage all fixtures list
+  function loadAllFixtures() {
+    fetch(FIXTURE_API + '/all', { headers: HEADERS })
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(list => {
+        // render a manage table below the form
+        let container = document.getElementById('manageFixtures');
+        if (!container) {
+          container = document.createElement('div');
+          container.id = 'manageFixtures';
+          document.querySelector('.fixture-section').appendChild(container);
+        }
+        if (!list.length) {
+          container.innerHTML = '<p style="color:#8a9bbf;margin-top:0.75rem;">No fixtures yet.</p>';
+          return;
+        }
+        const rows = list.map(f => {
+          return `<div style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0;border-bottom:1px dashed rgba(255,255,255,0.03);">
+            <div style="flex:1">
+              <div style="font-weight:500">${escapeHtml(f.rivalTeam)} · ${escapeHtml(f.date)} ${escapeHtml(f.time || '')}</div>
+              <div style="font-size:0.85rem;color:#8a9bbf">${escapeHtml(f.stadium || '')} ${f.isFinished ? ' · Result: ' + escapeHtml(f.result || '') : ''}</div>
+            </div>
+            <div style="display:flex;gap:0.5rem;margin-left:1rem">
+              <button class="btn btn-ghost" onclick="editFixture('${f.id}')">Edit</button>
+              <button class="btn btn-danger" onclick="deleteFixture('${f.id}')">Delete</button>
+            </div>
+          </div>`;
+        }).join('');
+        container.innerHTML = '<p class="section-title" style="margin-top:1rem;">Manage All Fixtures</p>' + rows;
+      })
+      .catch(err => console.error('Load fixtures failed:', err));
+  }
+
   function saveFixture(event) {
     event.preventDefault();
     const finished = document.getElementById('f_finished').checked;
     const ftScore  = document.getElementById('f_ftScore') ? document.getElementById('f_ftScore').value.trim() : '';
+    const id = document.getElementById('f_id') ? document.getElementById('f_id').value.trim() : '';
     const body = {
+      id:           id || null,
       rivalTeam:    document.getElementById('f_rival').value.trim(),
       stadium:      document.getElementById('f_stadium').value.trim(),
       date:         document.getElementById('f_date').value,
@@ -478,26 +500,62 @@
     };
     if (!body.rivalTeam || !body.date || !body.time) { alert('Rival team, date and time are required.'); return; }
 
-    fetch(FIXTURE_API, { method: 'PUT', headers: { ...HEADERS, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    // If id exists → update via PUT, otherwise create via POST
+    const method = body.id ? 'PUT' : 'POST';
+    fetch(FIXTURE_API, { method: method, headers: { ...HEADERS, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       .then(r => r.text().then(t => ({ ok: r.ok, t })))
       .then(({ ok, t }) => {
         if (!ok) throw new Error(t);
-        alert('✅ Fixture saved!');
-        loadFixture();
+        alert('✅ Fixture ' + (method === 'POST' ? 'created' : 'updated') + '!');
+        // reset form id to empty (for create)
+        if (document.getElementById('f_id')) document.getElementById('f_id').value = '';
+        loadBannerFixture(); loadAllFixtures();
       })
       .catch(err => alert('❌ Save fixture failed:\n' + err.message));
   }
 
-  function clearFixture() {
-    if (!confirm('Clear the current fixture?')) return;
-    fetch(FIXTURE_API, { method: 'DELETE', headers: HEADERS })
-      .then(r => { if (r.ok) loadFixture(); else alert('Failed to clear fixture'); })
+  function editFixture(id) {
+    fetch(FIXTURE_API + '/all', { headers: HEADERS })
+      .then(r => r.json())
+      .then(list => {
+        const f = list.find(x => x.id === id); if (!f) return alert('Fixture not found');
+        // ensure hidden id input exists
+        let idEl = document.getElementById('f_id');
+        if (!idEl) {
+          idEl = document.createElement('input'); idEl.type = 'hidden'; idEl.id = 'f_id';
+          document.getElementById('fixtureForm').appendChild(idEl);
+        }
+        idEl.value = f.id;
+        document.getElementById('f_rival').value   = f.rivalTeam || '';
+        document.getElementById('f_stadium').value = f.stadium || '';
+        document.getElementById('f_date').value    = f.date || '';
+        document.getElementById('f_time').value    = f.time || '';
+        document.getElementById('f_result').value  = f.result || 'vs';
+        const fin = f.isFinished || false;
+        document.getElementById('f_finished').checked = fin;
+        toggleFinishedFields(fin);
+        if (document.getElementById('f_ftScore') && f.result && f.result !== 'vs') {
+          document.getElementById('f_ftScore').value = f.result;
+        }
+        if (document.getElementById('f_goalScorers') && f.goalScorers) {
+          document.getElementById('f_goalScorers').value = f.goalScorers;
+        }
+      })
+      .catch(err => console.error('Edit fixture failed', err));
+  }
+
+  function deleteFixture(id) {
+    if (!confirm('Delete this fixture?')) return;
+    fetch(FIXTURE_API + '/' + id, { method: 'DELETE', headers: HEADERS })
+      .then(r => { if (r.ok) { loadAllFixtures(); loadBannerFixture(); } else r.text().then(b => alert('Delete failed: ' + b)); })
       .catch(err => alert('Error: ' + err.message));
   }
 
+  function escapeHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
   /* ── Init ────────────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', function () {
-    if (SECRET) { loadPlayers(); loadNews(); loadFixture(); }
+    if (SECRET) { loadPlayers(); loadNews(); loadBannerFixture(); loadAllFixtures(); }
   });
 </script>
 </body>

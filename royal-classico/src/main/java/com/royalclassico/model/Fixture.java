@@ -7,14 +7,12 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Single-entry model for the next upcoming match fixture.
- * Fields use simple types (String for date/time) to avoid serialization issues.
- * Only one document of this type should exist in the DB (upsert pattern).
+ * Multi-entry model for fixtures. Each save() creates a new document (unique id).
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "next_fixture")
+@Document(collection = "fixtures")
 public class Fixture {
 
     @Id
@@ -32,18 +30,12 @@ public class Fixture {
     /** Stadium / venue name */
     private String stadium;
 
-    /**
-     * Result display string — defaults to "vs" before the match,
-     * updated to "2-1" or similar after.
-     */
+    /** Result display string — defaults to "vs" before the match. */
     private String result = "vs";
 
     /** True once the match has been played and a result is recorded */
     private boolean isFinished = false;
 
-    /**
-     * Optional: goal scorer names and times, e.g. "Aung Ko (23'), Zaw Min (67')"
-     * Shown on the fixtures page under past results.
-     */
+    /** Optional: goal scorer names and times */
     private String goalScorers;
 }
