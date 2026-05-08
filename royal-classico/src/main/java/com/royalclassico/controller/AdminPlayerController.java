@@ -48,7 +48,9 @@ public class AdminPlayerController {
             @RequestPart("name")                              String name,
             @RequestPart(value = "jerseyName", required = false) String jerseyName,
             @RequestPart(value = "positions",  required = false) String positionsRaw,
+            @RequestPart(value = "age", required = false)     String ageRaw,
             @RequestPart("jerseyNumber")                      String jerseyNumber,
+            @RequestPart(value = "tacticalRole", required = false) String tacticalRole,
             @RequestPart(value = "image", required = false)  MultipartFile image) {
 
         System.out.println("[AdminPlayerController] POST /players — name=" + name);
@@ -56,10 +58,24 @@ public class AdminPlayerController {
             Player player = new Player();
             player.setName(name);
             player.setJerseyName(jerseyName);
-            player.setJerseyNumber(Integer.parseInt(jerseyNumber.trim()));
+            // parse jersey number safely
+            if (jerseyNumber != null && !jerseyNumber.isBlank()) {
+                player.setJerseyNumber(Integer.parseInt(jerseyNumber.trim()));
+            }
+            // parse age safely
+            if (ageRaw != null && !ageRaw.isBlank()) {
+                try {
+                    player.setAge(Integer.parseInt(ageRaw.trim()));
+                } catch (NumberFormatException nfe) {
+                    System.err.println("Invalid age provided: " + ageRaw);
+                    return ResponseEntity.badRequest().body("Invalid age");
+                }
+            }
+            player.setTacticalRole(tacticalRole);
             if (positionsRaw != null && !positionsRaw.isBlank()) {
                 player.setPositions(Arrays.asList(positionsRaw.trim().split("\\s*,\\s*")));
             }
+
             Player created = playerService.createPlayer(player, image);
             System.out.println("[AdminPlayerController] Created player id=" + created.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -69,6 +85,9 @@ public class AdminPlayerController {
         } catch (IOException e) {
             System.err.println("[AdminPlayerController] Image upload failed: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Image upload failed: " + e.getMessage());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create player");
         }
     }
 
@@ -81,18 +100,55 @@ public class AdminPlayerController {
             @RequestPart("name")                              String name,
             @RequestPart(value = "jerseyName", required = false) String jerseyName,
             @RequestPart(value = "positions",  required = false) String positionsRaw,
+            @RequestPart(value = "age", required = false)     String ageRaw,
             @RequestPart("jerseyNumber")                      String jerseyNumber,
+            @RequestPart(value = "tacticalRole", required = false) String tacticalRole,
             @RequestPart(value = "image", required = false)  MultipartFile image) {
 
         System.out.println("[AdminPlayerController] PUT /players/" + id);
         try {
+            // Ensure the player exists first so we can give 404 immediately
+            var existingOpt = playerService.getPlayerById(id);
+            if (existingOpt.isEmpty()) return ResponseEntity.notFound().build();
+
             Player updatedData = new Player();
-            updatedData.setName(name);
-            updatedData.setJerseyName(jerseyName);
-            updatedData.setJerseyNumber(Integer.parseInt(jerseyNumber.trim()));
+            // Name is required by the API contract — still validate non-empty
+            if (name == null || name.isBlank()) {
+                return ResponseEntity.badRequest().body("name is required");
+            }
+            updatedData.setName(name.trim());
+
+            if (jerseyName != null && !jerseyName.isBlank()) {
+                updatedData.setJerseyName(jerseyName.trim());
+            }
+
+            // jersey number: parse safely, leave null to indicate no-change
+            if (jerseyNumber != null && !jerseyNumber.isBlank()) {
+                try {
+                    int num = Integer.parseInt(jerseyNumber.trim());
+                    if (num < 0 || num > 999) return ResponseEntity.badRequest().body("jerseyNumber out of range");
+                    updatedData.setJerseyNumber(num);
+                } catch (NumberFormatException nfe) {
+                    return ResponseEntity.badRequest().body("jerseyNumber must be an integer");
+                }
+            }
+
+            // age: optional — only set when provided and valid
+            if (ageRaw != null && !ageRaw.isBlank()) {
+                try {
+                    int age = Integer.parseInt(ageRaw.trim());
+                    if (age < 12 || age > 70) return ResponseEntity.badRequest().body("age must be between 12 and 70");
+                    updatedData.setAge(age);
+                } catch (NumberFormatException nfe) {
+                    return ResponseEntity.badRequest().body("age must be an integer");
+                }
+            }
+
+            updatedData.setTacticalRole(tacticalRole);
             if (positionsRaw != null && !positionsRaw.isBlank()) {
                 updatedData.setPositions(Arrays.asList(positionsRaw.trim().split("\\s*,\\s*")));
             }
+
             Player updated = playerService.updatePlayer(id, updatedData, image);
             return ResponseEntity.ok(updated);
         } catch (NoSuchElementException e) {
@@ -101,6 +157,9 @@ public class AdminPlayerController {
             return ResponseEntity.badRequest().body("Invalid data: " + e.getMessage());
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Image upload failed: " + e.getMessage());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update player");
         }
     }
 

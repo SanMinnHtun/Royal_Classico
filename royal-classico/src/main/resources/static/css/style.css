@@ -512,6 +512,9 @@ section { padding: 5rem 0; }
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 1.25rem;
+  /* Make grid rows flexible so each card can stretch to the same height */
+  grid-auto-rows: 1fr;
+  align-items: stretch; /* stretch grid items vertically */
 }
 
 /* ── Player Card — Shield Aesthetic ───────────────────────── */
@@ -524,6 +527,10 @@ section { padding: 5rem 0; }
   transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
   position: relative;
   box-shadow: inset 0 0 0 1px rgba(197,160,101,0.08);
+  /* Use flex column so body grows and footer stays pinned; 100% height fills grid row */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 /* Gold gradient border on hover */
@@ -550,11 +557,12 @@ section { padding: 5rem 0; }
 }
 
 .player-card__img-wrap {
+  /* Fixed visual area while keeping responsive via media queries */
   height: 240px;
+  min-height: 160px;
+  flex: 0 0 auto; /* do not stretch image container */
   overflow: hidden;
-  background: #0f172a;
-  position: relative;
-  z-index: 1;
+  background: linear-gradient(180deg,#071225,#041122);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -562,12 +570,16 @@ section { padding: 5rem 0; }
 
 .player-card__img {
   width: 100%; height: 100%;
-  object-fit: contain;
-  object-position: center;
-  transition: opacity 0.3s ease;
-  background: #0f172a;
+  object-fit: cover; /* crop while preserving aspect ratio */
+  object-position: center top; /* prefer faces in the top area */
+  display: block;
+  background-color: #0f172a; /* placeholder color while loading */
+  transition: opacity 0.25s ease, transform 0.35s ease;
 }
-.player-card:hover .player-card__img { opacity: 0.92; }
+.player-card:hover .player-card__img {
+  transform: scale(1.03);
+  opacity: 0.98;
+}
 
 .player-card__img-placeholder {
   width: 100%; height: 100%;
@@ -577,15 +589,13 @@ section { padding: 5rem 0; }
   position: relative; z-index: 1;
 }
 
+/* Ensure the number badge does not cause reflow and sits above image */
 .player-card__number {
   position: absolute;
-  top: 10px; left: 10px;
-  font-family: var(--ff-display);
-  font-size: 2rem;
-  color: var(--clr-gold);
-  line-height: 1;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.6);
-  z-index: 2;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  pointer-events: none;
 }
 
 .player-card__body { padding: 1rem; position: relative; z-index: 1; }
