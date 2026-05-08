@@ -5,6 +5,8 @@ import com.royalclassico.service.FixtureService;
 import com.royalclassico.service.NewsService;
 import com.royalclassico.service.PlayerService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +21,8 @@ import java.util.List;
 @Controller
 @RequiredArgsConstructor
 public class PublicPageController {
+
+    private static final Logger log = LoggerFactory.getLogger(PublicPageController.class);
 
     private final NewsService    newsService;
     private final PlayerService  playerService;
@@ -42,6 +46,13 @@ public class PublicPageController {
         List<Player> all = playerService.getAllPlayers();
         model.addAttribute("allPlayers", all);
         model.addAttribute("players", all);
+
+        // Debug: log players and key fields to help trace missing photos/ages/numbers
+        log.info("Loaded {} players for squad page", all.size());
+        for (Player p : all) {
+            log.info("player id={} name='{}' age={} jerseyNumber={} imagePath='{}' positions={}",
+                    p.getId(), p.getName(), p.getAge(), p.getJerseyNumber(), p.getImagePath(), p.getPositions());
+        }
 
         // Group players by primary position (first position in positions list) — null-safe
         List<Player> gk = new ArrayList<>();

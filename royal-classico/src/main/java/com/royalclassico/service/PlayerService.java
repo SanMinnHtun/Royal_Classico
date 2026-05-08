@@ -52,15 +52,35 @@ public class PlayerService {
         Player existing = playerRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Player not found: " + id));
 
-        existing.setName(updatedData.getName());
-        existing.setJerseyName(updatedData.getJerseyName());
-        existing.setAge(updatedData.getAge());
-        existing.setJerseyNumber(updatedData.getJerseyNumber());
+        // Only overwrite when incoming values are non-null — prevents accidental clearing of fields
+        if (updatedData.getName() != null) {
+            existing.setName(updatedData.getName());
+        }
+        if (updatedData.getJerseyName() != null) {
+            existing.setJerseyName(updatedData.getJerseyName());
+        }
+        if (updatedData.getAge() != null) {
+            Integer age = updatedData.getAge();
+            // Basic validation: reasonable human footballing age
+            if (age < 12 || age > 70) {
+                throw new IllegalArgumentException("age must be between 12 and 70");
+            }
+            existing.setAge(age);
+        }
+        if (updatedData.getJerseyNumber() != null) {
+            Integer num = updatedData.getJerseyNumber();
+            if (num < 0 || num > 999) {
+                throw new IllegalArgumentException("jerseyNumber out of allowed range");
+            }
+            existing.setJerseyNumber(num);
+        }
         if (updatedData.getPositions() != null) {
             existing.setPositions(updatedData.getPositions());
         }
         // tacticalRole mapping
-        existing.setTacticalRole(updatedData.getTacticalRole());
+        if (updatedData.getTacticalRole() != null) {
+            existing.setTacticalRole(updatedData.getTacticalRole());
+        }
 
         if (imageFile != null && !imageFile.isEmpty()) {
             fileStorageService.deleteFile(existing.getImagePath());

@@ -9,19 +9,73 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link rel="stylesheet" th:href="@{/css/style.css}"/>
   <style>
-    /* Squad overrides to ensure 4 cards per row, image contain and dark image backdrop */
+    /* Final restoration: fixed card sizing, image handling, z-index for shirt number */
+    :root { --navy: rgba(6,16,36,0.6); --card-bg: rgba(8,18,36,0.55); --gold: #C5A065; }
+    body { font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; }
+
     .players-grid { display:grid; grid-template-columns: repeat(4, 1fr); gap:1.25rem; }
-    .player-card { background: rgba(6,16,36,0.55); border-radius:10px; overflow:hidden; box-shadow: 0 6px 18px rgba(2,6,20,0.35); border:1px solid rgba(197,160,101,0.06); display:flex; flex-direction:column; font-weight:400; }
-    .player-card__img-wrap { position:relative; height:190px; background:#071225; display:flex;align-items:center;justify-content:center; }
-    .player-card__img { width:100%; height:100%; object-fit:cover; display:block; }
-    .player-card__img-placeholder { font-size:42px; color:#9aa7c8; display:flex; align-items:center; justify-content:center; height:100%; width:100%; }
-    .player-card__number { position:absolute; left:14px; top:14px; font-size:22px; font-weight:500; color:#C5A065; }
-    .player-card__body { padding:14px; color:#dfe7f7; }
-    .player-card__name { font-size:15px; font-weight:500; margin-bottom:6px; }
-    .pc-jersey-name { font-size:13px; color:#b8c6e6; margin-bottom:4px; }
-    .pc-age { font-size:13px; color:#9fb0d6; margin-bottom:8px; }
-    .player-card__pos { background:rgba(197,160,101,0.08); color:#C5A065; padding:6px 8px; border-radius:16px; font-size:12px; margin-right:6px; }
-    .tactical-role { border:1px solid rgba(197,160,101,0.22); color:#C5A065; padding:4px 8px; border-radius:12px; font-size:12px; margin-left:6px; }
+
+    /* Fixed card size so all cards are equal height */
+    .player-card {
+      height: 460px; /* fixed height for uniformity */
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between; /* ensures body content stays aligned */
+      background: linear-gradient(180deg, rgba(10,20,40,0.45), rgba(6,12,28,0.38));
+      border-radius:10px; overflow:hidden; transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease; border:1px solid rgba(255,255,255,0.02);
+    }
+    .player-card:hover { transform: translateY(-6px); box-shadow: 0 10px 30px rgba(2,8,26,0.5); border:1px solid rgba(197,160,101,0.18); }
+
+    /* Image container fixed height: faces preserved using object-position: top */
+    .player-card__img-wrap { position:relative; height:280px; background:linear-gradient(180deg,#071225,#041122); display:flex;align-items:flex-start;justify-content:center; overflow:hidden; }
+    .player-card__img { width:100%; height:100%; object-fit:cover; object-position: top; display:block; }
+
+    /* Shirt number sits above the image */
+    .player-card__number {
+      position:absolute; left:14px; top:22px; z-index:10; font-size:20px; font-weight:600; color:var(--gold);
+      background: rgba(0,0,0,0.45); padding:8px 10px; border-radius:999px; box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+      display:inline-flex; align-items:center; justify-content:center;
+    }
+
+    /* Tightened text area: remove vertical spacing, stack from top */
+    .player-card__body {
+      /* remove any fixed sizing that might create a gap under the image */
+      padding: 5px 14px; /* small top/bottom padding as requested */
+      color: #e6eefc;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start; /* "No-Crack" rule: start from the top */
+      flex: 1;
+      gap: 6px;
+    }
+
+    /* inner groups stack tightly with small gaps */
+    .player-card__body > div { display: flex; flex-direction: column; gap: 4px; }
+
+    /* Player name: increase font size by 2px and tighten margins */
+    .player-card__name { font-size: 20px; font-weight:500; margin: 0; }
+
+    /* Jersey name (italic) remains directly under the name */
+    .pc-jersey-name { font-size:13px; color:#b8c6e6; font-style:italic; margin: 0; }
+
+    /* Age: keep small but reduce bottom gap */
+    .pc-age { font-size:13px; color:#9fb0d6; margin: 0; }
+
+    /* Pills: keep horizontal row for positions, but place tactical role above positions */
+    .pills { display:flex; gap:8px; margin-top:6px; align-items:center; flex-wrap:wrap; }
+    .pill { padding:6px 10px; border-radius:999px; font-size:12px; background:rgba(255,255,255,0.03); color:#cfe3ff; border:1px solid rgba(255,255,255,0.03); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+    /* Tactical role should sit above the other position pills */
+    .pill.role {
+      border-color: rgba(197,160,101,0.14);
+      color: var(--gold);
+      box-shadow: 0 4px 18px rgba(197,160,101,0.06);
+      font-size: 14px; /* increase by ~2px */
+      order: -1; /* move to the top of the flex line */
+      flex-basis: 100%; /* force it onto its own line above positions */
+      padding: 4px 10px;
+    }
+    .pill { order: 0; }
+
     @media (max-width:1100px){ .players-grid { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width:800px){ .players-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width:480px){ .players-grid { grid-template-columns: 1fr; } }
@@ -29,7 +83,7 @@
 </head>
 <body>
 
-<!-- ══ NAVBAR ══════════════════════════════════════════════ -->
+<!-- NAVBAR -->
 <nav class="navbar">
   <div class="navbar__inner">
     <a href="/" class="navbar__brand">
@@ -44,193 +98,216 @@
   </div>
 </nav>
 
-<!-- ══ PAGE HERO ════════════════════════════════════════════ -->
-<section class="page-hero">
-  <div class="container">
-    <p class="page-hero__eyebrow">Season 2025 / 2026</p>
-    <h1>Our <span class="gold">Squad</span></h1>
+<!-- HERO -->
+<section class="page-hero"><div class="container"><p class="page-hero__eyebrow">Season 2025 / 2026</p><h1>Our <span class="gold">Squad</span></h1></div></section>
+
+<section class="squad-section"><div class="container">
+
+  <div th:if="${#lists.isEmpty(players)}" class="empty-state"><div class="empty-state__icon">👕</div><p class="empty-state__text">Squad hasn't been announced yet. Stay tuned!</p></div>
+
+  <!-- Goalkeepers -->
+  <div th:if="${!#lists.isEmpty(gkPlayers)}" class="position-group">
+    <p class="position-group__label">Goalkeepers</p>
+    <div class="players-grid">
+      <div th:each="player : ${gkPlayers}">
+        <div class="player-card">
+          <div class="player-card__img-wrap">
+
+            <!-- Force absolute path starting with / so it works on /squad -->
+            <img th:if="${player.imagePath != null}"
+                 th:src="@{/uploads/{path}(path=${player.imagePath})}"
+                 th:alt="${player.name}"
+                 class="player-card__img"
+                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
+
+            <img th:if="${player.imagePath == null}"
+                 th:src="@{/images/photo_2026-04-26_23-43-31.jpg}"
+                 th:alt="${player.name}"
+                 class="player-card__img"
+                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
+
+            <span class="player-card__number" th:text="${player.jerseyNumber != null ? player.jerseyNumber : ''}"></span>
+          </div>
+          <div class="player-card__body">
+            <div>
+              <p class="player-card__name" th:text="${player.name != null ? player.name : 'Player'}"></p>
+              <p class="pc-jersey-name" th:text="${player.jerseyName != null ? player.jerseyName : ''}"></p>
+            </div>
+
+            <div>
+              <p class="pc-age" th:text="${player.age != null ? player.age : ''}"></p>
+              <div class="pills">
+                <span th:each="pos : ${player.positions}" class="pill" th:text="${pos}"></span>
+                <span th:if="${player.tacticalRole != null and player.tacticalRole != ''}" class="pill role" th:text="${player.tacticalRole}"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-</section>
 
-<!-- ══ FIXTURE STRIP ════════════════════════════════════════ -->
-<div th:if="${nextFixture != null}" class="fixture-banner">
-  <div class="container fixture-banner__inner">
-    <div class="fixture-banner__label">Next Match</div>
-    <div class="fixture-banner__match">
-      <span class="fixture-banner__team">Royal Classico</span>
-      <span class="fixture-banner__vs" th:text="${nextFixture.result ?: 'vs'}">vs</span>
-      <span class="fixture-banner__team" th:text="${nextFixture.rivalTeam}">Rival Team</span>
-    </div>
-    <div class="fixture-banner__meta">
-      <div class="fixture-meta-item">
-        <span>Date</span>
-        <span th:text="${nextFixture.date}">Date</span>
-      </div>
-      <div class="fixture-meta-item">
-        <span>Kick-off</span>
-        <span th:text="${nextFixture.time}">Time</span>
-      </div>
-      <div class="fixture-meta-item">
-        <span>Venue</span>
-        <span th:text="${nextFixture.stadium}">Stadium</span>
+  <!-- Defenders -->
+  <div th:if="${!#lists.isEmpty(defPlayers)}" class="position-group">
+    <p class="position-group__label">Defenders</p>
+    <div class="players-grid">
+      <div th:each="player : ${defPlayers}">
+        <div class="player-card">
+          <div class="player-card__img-wrap">
+            <img th:if="${player.imagePath != null}"
+                 th:src="@{/uploads/{path}(path=${player.imagePath})}"
+                 th:alt="${player.name}"
+                 class="player-card__img"
+                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
+
+            <img th:if="${player.imagePath == null}"
+                 th:src="@{/images/photo_2026-04-26_23-43-31.jpg}"
+                 th:alt="${player.name}"
+                 class="player-card__img"
+                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
+
+            <span class="player-card__number" th:text="${player.jerseyNumber != null ? player.jerseyNumber : ''}"></span>
+          </div>
+          <div class="player-card__body">
+            <div>
+              <p class="player-card__name" th:text="${player.name != null ? player.name : 'Player'}"></p>
+              <p class="pc-jersey-name" th:text="${player.jerseyName != null ? player.jerseyName : ''}"></p>
+            </div>
+            <div>
+              <p class="pc-age" th:text="${player.age != null ? player.age : ''}"></p>
+              <div class="pills">
+                <span th:each="pos : ${player.positions}" class="pill" th:text="${pos}"></span>
+                <span th:if="${player.tacticalRole != null and player.tacticalRole != ''}" class="pill role" th:text="${player.tacticalRole}"></span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-  <!-- ── SQUAD — Grouped by position (server-side) ── -->
-  <section class="squad-section">
-    <div class="container">
+  <!-- Midfielders -->
+  <div th:if="${!#lists.isEmpty(midPlayers)}" class="position-group">
+    <p class="position-group__label">Midfielders</p>
+    <div class="players-grid">
+      <div th:each="player : ${midPlayers}">
+        <div class="player-card">
+          <div class="player-card__img-wrap">
+            <img th:if="${player.imagePath != null}"
+                 th:src="@{/uploads/{path}(path=${player.imagePath})}"
+                 th:alt="${player.name}"
+                 class="player-card__img"
+                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
 
-      <div th:if="${#lists.isEmpty(players)}" class="empty-state">
-        <div class="empty-state__icon">👕</div>
-        <p class="empty-state__text">Squad hasn't been announced yet. Stay tuned!</p>
-      </div>
+            <img th:if="${player.imagePath == null}"
+                 th:src="@{/images/photo_2026-04-26_23-43-31.jpg}"
+                 th:alt="${player.name}"
+                 class="player-card__img"
+                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
 
-      <!-- Goalkeepers -->
-      <div th:if="${!#lists.isEmpty(gkPlayers)}" class="position-group">
-        <p class="position-group__label">Goalkeepers</p>
-        <div class="players-grid">
-          <div th:each="player : ${gkPlayers}">
-            <div class="player-card">
-              <div class="player-card__img-wrap">
-                <img th:src="@{/${player.imagePath}}"
-                     th:alt="${player.name}" class="player-card__img"
-                     onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';"/>
-                <span class="player-card__number" th:text="${player.jerseyNumber != null ? player.jerseyNumber : ''}"></span>
-              </div>
-              <div class="player-card__body">
-                <p class="player-card__name" th:text="${player.name != null ? player.name : 'Player'}"></p>
-                <p class="pc-jersey-name" th:if="${player.jerseyName != null}" th:text="${player.jerseyName}"></p>
-                <p class="pc-age" th:text="${player.age != null ? 'Age ' + player.age : 'Age N/A'}"></p>
-                <div>
-                  <small th:if="${player.tacticalRole != null and player.tacticalRole != ''}" class="tactical-role" th:text="${player.tacticalRole}"></small>
-                </div>
-                <div style="margin-top:8px;">
-                  <span th:each="pos : ${player.positions}" class="player-card__pos" th:text="${pos}"></span>
-                </div>
+            <span class="player-card__number" th:text="${player.jerseyNumber != null ? player.jerseyNumber : ''}"></span>
+          </div>
+          <div class="player-card__body">
+            <div>
+              <p class="player-card__name" th:text="${player.name != null ? player.name : 'Player'}"></p>
+              <p class="pc-jersey-name" th:text="${player.jerseyName != null ? player.jerseyName : ''}"></p>
+            </div>
+
+            <div>
+              <p class="pc-age" th:text="${player.age != null ? player.age : ''}"></p>
+              <div class="pills">
+                <span th:each="pos : ${player.positions}" class="pill" th:text="${pos}"></span>
+                <span th:if="${player.tacticalRole != null and player.tacticalRole != ''}" class="pill role" th:text="${player.tacticalRole}"></span>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- Defenders -->
-      <div th:if="${!#lists.isEmpty(defPlayers)}" class="position-group">
-        <p class="position-group__label">Defenders</p>
-        <div class="players-grid">
-          <div th:each="player : ${defPlayers}">
-            <div class="player-card">
-              <div class="player-card__img-wrap">
-                <img th:src="@{/${player.imagePath}}"
-                     th:alt="${player.name}" class="player-card__img"
-                     onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';"/>
-                <span class="player-card__number" th:text="${player.jerseyNumber != null ? player.jerseyNumber : ''}"></span>
-              </div>
-              <div class="player-card__body">
-                <p class="player-card__name" th:text="${player.name != null ? player.name : 'Player'}"></p>
-                <p class="pc-jersey-name" th:if="${player.jerseyName != null}" th:text="${player.jerseyName}"></p>
-                <p class="pc-age" th:text="${player.age != null ? 'Age ' + player.age : 'Age N/A'}"></p>
-                <div>
-                  <small th:if="${player.tacticalRole != null and player.tacticalRole != ''}" class="tactical-role" th:text="${player.tacticalRole}"></small>
-                </div>
-                <div style="margin-top:8px;">
-                  <span th:each="pos : ${player.positions}" class="player-card__pos" th:text="${pos}"></span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Midfielders -->
-      <div th:if="${!#lists.isEmpty(midPlayers)}" class="position-group">
-        <p class="position-group__label">Midfielders</p>
-        <div class="players-grid">
-          <div th:each="player : ${midPlayers}">
-            <div class="player-card">
-              <div class="player-card__img-wrap">
-                <img th:src="@{/${player.imagePath}}"
-                     th:alt="${player.name}" class="player-card__img"
-                     onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';"/>
-                <span class="player-card__number" th:text="${player.jerseyNumber != null ? player.jerseyNumber : ''}"></span>
-              </div>
-              <div class="player-card__body">
-                <p class="player-card__name" th:text="${player.name != null ? player.name : 'Player'}"></p>
-                <p class="pc-jersey-name" th:if="${player.jerseyName != null}" th:text="${player.jerseyName}"></p>
-                <p class="pc-age" th:text="${player.age != null ? 'Age ' + player.age : 'Age N/A'}"></p>
-                <div>
-                  <small th:if="${player.tacticalRole != null and player.tacticalRole != ''}" class="tactical-role" th:text="${player.tacticalRole}"></small>
-                </div>
-                <div style="margin-top:8px;">
-                  <span th:each="pos : ${player.positions}" class="player-card__pos" th:text="${pos}"></span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Forwards -->
-      <div th:if="${!#lists.isEmpty(fwdPlayers)}" class="position-group">
-        <p class="position-group__label">Forwards</p>
-        <div class="players-grid">
-          <div th:each="player : ${fwdPlayers}">
-            <div class="player-card">
-              <div class="player-card__img-wrap">
-                <img th:src="@{/${player.imagePath}}"
-                     th:alt="${player.name}" class="player-card__img"
-                     onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';"/>
-                <span class="player-card__number" th:text="${player.jerseyNumber != null ? player.jerseyNumber : ''}"></span>
-              </div>
-              <div class="player-card__body">
-                <p class="player-card__name" th:text="${player.name != null ? player.name : 'Player'}"></p>
-                <p class="pc-jersey-name" th:if="${player.jerseyName != null}" th:text="${player.jerseyName}"></p>
-                <p class="pc-age" th:text="${player.age != null ? 'Age ' + player.age : 'Age N/A'}"></p>
-                <div>
-                  <small th:if="${player.tacticalRole != null and player.tacticalRole != ''}" class="tactical-role" th:text="${player.tacticalRole}"></small>
-                </div>
-                <div style="margin-top:8px;">
-                  <span th:each="pos : ${player.positions}" class="player-card__pos" th:text="${pos}"></span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Other / Unassigned -->
-      <div th:if="${!#lists.isEmpty(otherPlayers)}" class="position-group">
-        <p class="position-group__label">Players</p>
-        <div class="players-grid">
-          <div th:each="player : ${otherPlayers}">
-            <div class="player-card">
-              <div class="player-card__img-wrap">
-                <img th:src="@{/${player.imagePath}}"
-                     th:alt="${player.name}" class="player-card__img"
-                     onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';"/>
-                <span class="player-card__number" th:text="${player.jerseyNumber != null ? player.jerseyNumber : ''}"></span>
-              </div>
-              <div class="player-card__body">
-                <p class="player-card__name" th:text="${player.name != null ? player.name : 'Player'}"></p>
-                <p class="pc-jersey-name" th:if="${player.jerseyName != null}" th:text="${player.jerseyName}"></p>
-                <p class="pc-age" th:text="${player.age != null ? 'Age ' + player.age : 'Age N/A'}"></p>
-                <div>
-                  <small th:if="${player.tacticalRole != null and player.tacticalRole != ''}" class="tactical-role" th:text="${player.tacticalRole}"></small>
-                </div>
-                <div style="margin-top:8px;">
-                  <span th:each="pos : ${player.positions}" class="player-card__pos" th:text="${pos}"></span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
-  </section>
+  </div>
 
-<!-- ══ FOOTER ══════════════════════════════════════════════ -->
+  <!-- Forwards -->
+  <div th:if="${!#lists.isEmpty(fwdPlayers)}" class="position-group">
+    <p class="position-group__label">Forwards</p>
+    <div class="players-grid">
+      <div th:each="player : ${fwdPlayers}">
+        <div class="player-card">
+          <div class="player-card__img-wrap">
+            <img th:if="${player.imagePath != null}"
+                 th:src="@{/uploads/{path}(path=${player.imagePath})}"
+                 th:alt="${player.name}"
+                 class="player-card__img"
+                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
+
+            <img th:if="${player.imagePath == null}"
+                 th:src="@{/images/photo_2026-04-26_23-43-31.jpg}"
+                 th:alt="${player.name}"
+                 class="player-card__img"
+                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
+
+            <span class="player-card__number" th:text="${player.jerseyNumber != null ? player.jerseyNumber : ''}"></span>
+          </div>
+          <div class="player-card__body">
+            <div>
+              <p class="player-card__name" th:text="${player.name != null ? player.name : 'Player'}"></p>
+              <p class="pc-jersey-name" th:text="${player.jerseyName != null ? player.jerseyName : ''}"></p>
+            </div>
+
+            <div>
+              <p class="pc-age" th:text="${player.age != null ? player.age : ''}"></p>
+              <div class="pills">
+                <span th:each="pos : ${player.positions}" class="pill" th:text="${pos}"></span>
+                <span th:if="${player.tacticalRole != null and player.tacticalRole != ''}" class="pill role" th:text="${player.tacticalRole}"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Other / Unassigned -->
+  <div th:if="${!#lists.isEmpty(otherPlayers)}" class="position-group">
+    <p class="position-group__label">Players</p>
+    <div class="players-grid">
+      <div th:each="player : ${otherPlayers}">
+        <div class="player-card">
+          <div class="player-card__img-wrap">
+            <img th:if="${player.imagePath != null}"
+                 th:src="@{/uploads/{path}(path=${player.imagePath})}"
+                 th:alt="${player.name}"
+                 class="player-card__img"
+                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
+
+            <img th:if="${player.imagePath == null}"
+                 th:src="@{/images/photo_2026-04-26_23-43-31.jpg}"
+                 th:alt="${player.name}"
+                 class="player-card__img"
+                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
+
+            <span class="player-card__number" th:text="${player.jerseyNumber != null ? player.jerseyNumber : ''}"></span>
+          </div>
+          <div class="player-card__body">
+            <div>
+              <p class="player-card__name" th:text="${player.name != null ? player.name : 'Player'}"></p>
+              <p class="pc-jersey-name" th:text="${player.jerseyName != null ? player.jerseyName : ''}"></p>
+            </div>
+
+            <div>
+              <p class="pc-age" th:text="${player.age != null ? player.age : ''}"></p>
+              <div class="pills">
+                <span th:each="pos : ${player.positions}" class="pill" th:text="${pos}"></span>
+                <span th:if="${player.tacticalRole != null and player.tacticalRole != ''}" class="pill role" th:text="${player.tacticalRole}"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div></section>
+
 <footer>
   <div class="container footer__inner">
     <div class="footer__brand">Royal Classico FC</div>
@@ -241,9 +318,7 @@
       <a href="/news">News</a>
     </nav>
     <div class="footer__divider"></div>
-    <p class="footer__copy">
-      &copy; 2026 Royal Classico Football Club. All rights reserved.
-    </p>
+    <p class="footer__copy">&copy; 2026 Royal Classico Football Club. All rights reserved.</p>
   </div>
 </footer>
 

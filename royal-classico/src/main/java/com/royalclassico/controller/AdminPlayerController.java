@@ -107,23 +107,48 @@ public class AdminPlayerController {
 
         System.out.println("[AdminPlayerController] PUT /players/" + id);
         try {
+            // Ensure the player exists first so we can give 404 immediately
+            var existingOpt = playerService.getPlayerById(id);
+            if (existingOpt.isEmpty()) return ResponseEntity.notFound().build();
+
             Player updatedData = new Player();
-            updatedData.setName(name);
-            updatedData.setJerseyName(jerseyName);
-            if (jerseyNumber != null && !jerseyNumber.isBlank()) {
-                updatedData.setJerseyNumber(Integer.parseInt(jerseyNumber.trim()));
+            // Name is required by the API contract — still validate non-empty
+            if (name == null || name.isBlank()) {
+                return ResponseEntity.badRequest().body("name is required");
             }
-            if (ageRaw != null && !ageRaw.isBlank()) {
+            updatedData.setName(name.trim());
+
+            if (jerseyName != null && !jerseyName.isBlank()) {
+                updatedData.setJerseyName(jerseyName.trim());
+            }
+
+            // jersey number: parse safely, leave null to indicate no-change
+            if (jerseyNumber != null && !jerseyNumber.isBlank()) {
                 try {
-                    updatedData.setAge(Integer.parseInt(ageRaw.trim()));
+                    int num = Integer.parseInt(jerseyNumber.trim());
+                    if (num < 0 || num > 999) return ResponseEntity.badRequest().body("jerseyNumber out of range");
+                    updatedData.setJerseyNumber(num);
                 } catch (NumberFormatException nfe) {
-                    return ResponseEntity.badRequest().body("Invalid age");
+                    return ResponseEntity.badRequest().body("jerseyNumber must be an integer");
                 }
             }
+
+            // age: optional — only set when provided and valid
+            if (ageRaw != null && !ageRaw.isBlank()) {
+                try {
+                    int age = Integer.parseInt(ageRaw.trim());
+                    if (age < 12 || age > 70) return ResponseEntity.badRequest().body("age must be between 12 and 70");
+                    updatedData.setAge(age);
+                } catch (NumberFormatException nfe) {
+                    return ResponseEntity.badRequest().body("age must be an integer");
+                }
+            }
+
             updatedData.setTacticalRole(tacticalRole);
             if (positionsRaw != null && !positionsRaw.isBlank()) {
                 updatedData.setPositions(Arrays.asList(positionsRaw.trim().split("\\s*,\\s*")));
             }
+
             Player updated = playerService.updatePlayer(id, updatedData, image);
             return ResponseEntity.ok(updated);
         } catch (NoSuchElementException e) {
