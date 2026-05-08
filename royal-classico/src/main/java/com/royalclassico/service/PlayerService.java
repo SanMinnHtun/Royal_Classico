@@ -59,6 +59,8 @@ public class PlayerService {
         if (updatedData.getPositions() != null) {
             existing.setPositions(updatedData.getPositions());
         }
+        // tacticalRole mapping
+        existing.setTacticalRole(updatedData.getTacticalRole());
 
         if (imageFile != null && !imageFile.isEmpty()) {
             fileStorageService.deleteFile(existing.getImagePath());

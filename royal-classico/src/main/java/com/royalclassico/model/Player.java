@@ -37,4 +37,7 @@ public class Player {
 
     /** Multiple allowed positions as plain strings: GK, DEF, MID, FWD */
     private List<String> positions;
+
+    /** Tactical role (e.g. "Playmaker", "Wing-Back") — optional */
+    private String tacticalRole;
 }

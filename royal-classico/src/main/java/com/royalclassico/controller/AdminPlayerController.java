@@ -48,7 +48,9 @@ public class AdminPlayerController {
             @RequestPart("name")                              String name,
             @RequestPart(value = "jerseyName", required = false) String jerseyName,
             @RequestPart(value = "positions",  required = false) String positionsRaw,
+            @RequestPart(value = "age", required = false)     String ageRaw,
             @RequestPart("jerseyNumber")                      String jerseyNumber,
+            @RequestPart(value = "tacticalRole", required = false) String tacticalRole,
             @RequestPart(value = "image", required = false)  MultipartFile image) {
 
         System.out.println("[AdminPlayerController] POST /players — name=" + name);
@@ -56,10 +58,24 @@ public class AdminPlayerController {
             Player player = new Player();
             player.setName(name);
             player.setJerseyName(jerseyName);
-            player.setJerseyNumber(Integer.parseInt(jerseyNumber.trim()));
+            // parse jersey number safely
+            if (jerseyNumber != null && !jerseyNumber.isBlank()) {
+                player.setJerseyNumber(Integer.parseInt(jerseyNumber.trim()));
+            }
+            // parse age safely
+            if (ageRaw != null && !ageRaw.isBlank()) {
+                try {
+                    player.setAge(Integer.parseInt(ageRaw.trim()));
+                } catch (NumberFormatException nfe) {
+                    System.err.println("Invalid age provided: " + ageRaw);
+                    return ResponseEntity.badRequest().body("Invalid age");
+                }
+            }
+            player.setTacticalRole(tacticalRole);
             if (positionsRaw != null && !positionsRaw.isBlank()) {
                 player.setPositions(Arrays.asList(positionsRaw.trim().split("\\s*,\\s*")));
             }
+
             Player created = playerService.createPlayer(player, image);
             System.out.println("[AdminPlayerController] Created player id=" + created.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -69,6 +85,9 @@ public class AdminPlayerController {
         } catch (IOException e) {
             System.err.println("[AdminPlayerController] Image upload failed: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Image upload failed: " + e.getMessage());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create player");
         }
     }
 
@@ -81,7 +100,9 @@ public class AdminPlayerController {
             @RequestPart("name")                              String name,
             @RequestPart(value = "jerseyName", required = false) String jerseyName,
             @RequestPart(value = "positions",  required = false) String positionsRaw,
+            @RequestPart(value = "age", required = false)     String ageRaw,
             @RequestPart("jerseyNumber")                      String jerseyNumber,
+            @RequestPart(value = "tacticalRole", required = false) String tacticalRole,
             @RequestPart(value = "image", required = false)  MultipartFile image) {
 
         System.out.println("[AdminPlayerController] PUT /players/" + id);
@@ -89,7 +110,17 @@ public class AdminPlayerController {
             Player updatedData = new Player();
             updatedData.setName(name);
             updatedData.setJerseyName(jerseyName);
-            updatedData.setJerseyNumber(Integer.parseInt(jerseyNumber.trim()));
+            if (jerseyNumber != null && !jerseyNumber.isBlank()) {
+                updatedData.setJerseyNumber(Integer.parseInt(jerseyNumber.trim()));
+            }
+            if (ageRaw != null && !ageRaw.isBlank()) {
+                try {
+                    updatedData.setAge(Integer.parseInt(ageRaw.trim()));
+                } catch (NumberFormatException nfe) {
+                    return ResponseEntity.badRequest().body("Invalid age");
+                }
+            }
+            updatedData.setTacticalRole(tacticalRole);
             if (positionsRaw != null && !positionsRaw.isBlank()) {
                 updatedData.setPositions(Arrays.asList(positionsRaw.trim().split("\\s*,\\s*")));
             }
@@ -101,6 +132,9 @@ public class AdminPlayerController {
             return ResponseEntity.badRequest().body("Invalid data: " + e.getMessage());
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Image upload failed: " + e.getMessage());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update player");
         }
     }
 

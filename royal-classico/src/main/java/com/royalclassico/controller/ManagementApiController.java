@@ -62,6 +62,7 @@ public class ManagementApiController {
             @RequestPart(value = "age", required = false) String ageStr,
             @RequestPart(value = "jerseyNumber", required = false) String jerseyNumberStr,
             @RequestPart(value = "positions", required = false) String positionsJson,
+            @RequestPart(value = "tacticalRole", required = false) String tacticalRole,
             @RequestPart(value = "image", required = false) MultipartFile image)
     {
         System.out.println("[ManagementApiController] POST /players — name=" + name
@@ -69,6 +70,7 @@ public class ManagementApiController {
                 + ", age=" + ageStr
                 + ", jerseyNumber=" + jerseyNumberStr
                 + ", positions=" + positionsJson
+                + ", tacticalRole=" + tacticalRole
                 + ", hasImage=" + (image != null && !image.isEmpty()));
 
         try {
@@ -80,6 +82,7 @@ public class ManagementApiController {
             Player p = new Player();
             p.setName(name);
             p.setJerseyName(jerseyName);
+            p.setTacticalRole(tacticalRole);
 
             if (ageStr != null && !ageStr.isBlank()) {
                 try { p.setAge(Integer.parseInt(ageStr.trim())); } catch (NumberFormatException ignored) {}
