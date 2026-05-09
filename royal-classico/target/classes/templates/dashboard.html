@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Management Dashboard — Royal Classico</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a1128;
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .dash { max-width: 1100px; margin: 0 auto; }
+
+    /* Header */
+    .dash-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 2rem; padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(197,160,101,0.3);
+    }
+    .dash-header h1 {
+      font-size: 1.5rem; font-weight: 500; color: #e0e0e0; letter-spacing: 0.02em;
+    }
+    .dash-header span { font-size: 0.8rem; color: #C5A065; }
+
+    /* Section titles */
+    .section-title {
+      font-size: 1rem; font-weight: 500; color: #C5A065;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      margin-bottom: 1rem; padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(197,160,101,0.2);
+    }
+
+    /* Cards grid */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1rem; margin-bottom: 2.5rem;
+    }
+    .p-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(197,160,101,0.15);
+      border-radius: 8px; padding: 0.75rem;
+      display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    }
+    .p-card .img-wrap { width:100%; height:110px; background:#071028; display:flex;align-items:center;justify-content:center;border-radius:6px; overflow:hidden; }
+    .p-card img {
+      width:100%; height:100%; object-fit:contain; border-radius: 0; display:block;
+    }
+    .p-card .p-name { font-size: 0.85rem; font-weight: 500; text-align: center; }
+    .p-card .p-sub  { font-size: 0.72rem; color: #8a9bbf; }
+
+    /* Add card */
+    .add-card {
+      background: rgba(197,160,101,0.08);
+      border: 1px dashed rgba(197,160,101,0.4);
+      border-radius: 8px; min-height: 140px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 2rem; color: #C5A065;
+      transition: background 0.2s;
+    }
+    .add-card:hover { background: rgba(197,160,101,0.15); }
+
+    /* News list */
+    .news-list { margin-bottom: 2.5rem; }
+    .news-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.75rem 1rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 6px; margin-bottom: 0.5rem;
+    }
+    .news-item .n-title { font-size: 0.9rem; font-weight: 500; }
+    .news-item .n-body  { font-size: 0.78rem; color: #8a9bbf; margin-top: 2px; }
+
+    /* Fixture section */
+    .fixture-section { margin-bottom: 2.5rem; }
+    .fixture-form {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(197,160,101,0.2);
+      border-radius: 10px; padding: 1.5rem;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
+    }
+    .fixture-form .full { grid-column: 1 / -1; }
+
+    /* Inputs */
+    .field-label { font-size: 0.72rem; color: #C5A065; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+    input, textarea, select {
+      width: 100%; padding: 0.6rem 0.8rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px; color: #e0e0e0;
+      font-family: 'Inter', sans-serif; font-size: 0.875rem;
+      outline: none; transition: border-color 0.2s;
+    }
+    input:focus, textarea:focus { border-color: #C5A065; }
+    input[type="file"] { padding: 0.4rem; }
+    .checkbox-row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+    .checkbox-row label { display: flex; gap: 5px; align-items: center; font-size: 0.85rem; cursor: pointer; }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1.2rem; border: none; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+    .btn-gold   { background: #C5A065; color: #0a1128; }
+    .btn-gold:hover { background: #d4b07a; }
+    .btn-ghost  { background: rgba(255,255,255,0.07); color: #e0e0e0; }
+    .btn-ghost:hover { background: rgba(255,255,255,0.13); }
+    .btn-danger { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+    .btn-danger:hover { background: rgba(239,68,68,0.25); }
+    .btn-row { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.5rem; }
+
+    /* Modal */
+    .modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      display: none; align-items: center; justify-content: center; z-index: 999;
+    }
+    .modal.open { display: flex; }
+    .modal-panel {
+      background: #0f1d3a; border: 1px solid rgba(197,160,101,0.25);
+      border-radius: 12px; padding: 1.75rem; width: 100%; max-width: 500px;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-title { font-size: 1rem; font-weight: 500; color: #C5A065; margin-bottom: 1.25rem; }
+    .form-field { margin-bottom: 0.75rem; }
+    .preview { max-width: 120px; border-radius: 6px; display: none; margin-top: 6px; }
+
+    /* Fixture current display */
+    .fixture-current {
+      background: rgba(197,160,101,0.08); border: 1px solid rgba(197,160,101,0.25);
+      border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .fixture-current .fc-match { font-size: 1rem; font-weight: 500; }
+    .fixture-current .fc-meta  { font-size: 0.78rem; color: #8a9bbf; margin-top: 3px; }
+  </style>
+</head>
+<body>
+<div class="dash">
+
+  <!-- Header -->
+  <div class="dash-header">
+    <h1>⚙ Management Dashboard</h1>
+    <span id="admin-status">Checking auth…</span>
+  </div>
+
+  <!-- ── FIXTURE SECTION ── -->
+  <section class="fixture-section">
+    <p class="section-title">📅 Next Fixture</p>
+    <div id="fixtureDisplay" style="display:none;" class="fixture-current">
+      <div>
+        <div class="fc-match" id="fc-match">Royal Classico vs —</div>
+        <div class="fc-meta" id="fc-meta">—</div>
+      </div>
+      <button class="btn btn-danger" onclick="clearFixture()">Clear</button>
+    </div>
+    <form class="fixture-form" id="fixtureForm" onsubmit="saveFixture(event)">
+      <div>
+        <div class="field-label">Rival Team</div>
+        <input id="f_rival" placeholder="e.g. FC Rangers" required/>
+      </div>
+      <div>
+        <div class="field-label">Stadium / Venue</div>
+        <input id="f_stadium" placeholder="e.g. Municipal Stadium"/>
+      </div>
+      <div>
+        <div class="field-label">Date</div>
+        <input id="f_date" type="date" required/>
+      </div>
+      <div>
+        <div class="field-label">Kick-off Time</div>
+        <input id="f_time" type="time" required/>
+      </div>
+      <div>
+        <div class="field-label">Result (leave "vs" if not played)</div>
+        <input id="f_result" placeholder="vs" value="vs"/>
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <label style="display:flex;gap:6px;align-items:center;font-size:0.85rem;cursor:pointer;">
+          <input type="checkbox" id="f_finished" onchange="toggleFinishedFields(this.checked)"/> Match Finished
+        </label>
+      </div>
+      <!-- Finished fields — revealed when "Match Finished" is checked -->
+      <div class="full" id="finished-fields" style="display:none; grid-template-columns:1fr 1fr; gap:0.75rem;">
+        <div>
+          <div class="field-label">Full-Time Score (e.g. 2-1)</div>
+          <input id="f_ftScore" placeholder="e.g. 2-1"/>
+        </div>
+        <div>
+          <div class="field-label">Goal Scorers</div>
+          <input id="f_goalScorers" placeholder="e.g. Aung Ko (23'), Zaw Min (67')"/>
+        </div>
+      </div>
+      <div class="full btn-row">
+        <button type="submit" class="btn btn-gold">💾 Save Fixture</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ── PLAYERS SECTION ── -->
+  <section>
+    <p class="section-title">👕 Players</p>
+    <div class="card-grid" id="playersGrid"></div>
+  </section>
+
+  <!-- ── NEWS SECTION ── -->
+  <section class="news-list">
+    <p class="section-title">📰 News</p>
+    <div style="text-align:right;margin-bottom:0.75rem;">
+      <button class="btn btn-gold" onclick="openModal('newsModal')">+ Add News</button>
+    </div>
+    <div id="newsList"></div>
+  </section>
+
+</div>
+
+<!-- ── PLAYER MODAL ── -->
+<div id="playerModal" class="modal" onclick="if(event.target===this)closeModal('playerModal')">
+  <div class="modal-panel">
+    <div class="modal-title">➕ Add Player</div>
+    <form onsubmit="submitPlayer(event)">
+      <div class="form-field">
+        <div class="field-label">Full Name *</div>
+        <input id="p_name" placeholder="Player name" required/>
+      </div>
+      <div class="form-field">
+        <div class="field-label">Jersey Name</div>
+        <input id="p_jerseyName" placeholder="Name on shirt"/>
+      </div>
+      <div class="form-field">
+        <div class="field-label">Tactical Role</div>
+        <input id="p_tacticalRole" placeholder="e.g. Playmaker, Wing-Back" />
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;" class="form-field">
+        <div>
+          <div class="field-label">Age</div>
+          <input id="p_age" type="number" placeholder="e.g. 22" min="15" max="50"/>
+        </div>
+        <div>
+          <div class="field-label">Jersey Number</div>
+          <input id="p_jerseyNumber" type="number" placeholder="e.g. 10" min="1" max="99" required/>
+        </div>
+      </div>
+      <div class="form-field">
+        <div class="field-label">Positions</div>
+        <div class="checkbox-row">
+          <label><input type="checkbox" value="GK"  class="poschk"/> GK</label>
+          <label><input type="checkbox" value="DEF" class="poschk"/> DEF</label>
+          <label><input type="checkbox" value="MID" class="poschk"/> MID</label>
+          <label><input type="checkbox" value="FWD" class="poschk"/> FWD</label>
+        </div>
+      </div>
+      <div class="form-field">
+        <div class="field-label">Player Photo</div>
+        <input id="p_image" type="file" accept="image/*" onchange="previewImg(this,'p_preview')"/>
+        <img id="p_preview" class="preview"/>
+      </div>
+      <div class="btn-row">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('playerModal')">Cancel</button>
+        <button type="submit" class="btn btn-gold">Save Player</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── NEWS MODAL ── -->
+<div id="newsModal" class="modal" onclick="if(event.target===this)closeModal('newsModal')">
+  <div class="modal-panel">
+    <div class="modal-title">📰 Add News</div>
+    <form onsubmit="submitNews(event)">
+      <div class="form-field">
+        <div class="field-label">Headline *</div>
+        <input id="n_title" placeholder="News headline" required/>
+      </div>
+      <div class="form-field">
+        <div class="field-label">Content *</div>
+        <textarea id="n_content" placeholder="Article content…" rows="4" required></textarea>
+      </div>
+      <div class="form-field">
+        <div class="field-label">Cover Image</div>
+        <input id="n_image" type="file" accept="image/*" onchange="previewImg(this,'n_preview')"/>
+        <img id="n_preview" class="preview"/>
+      </div>
+      <div class="btn-row">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('newsModal')">Cancel</button>
+        <button type="submit" class="btn btn-gold">Publish</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  /* ── Auth & API ─────────────────────────────────────────── */
+  const SECRET = localStorage.getItem('X-Admin-Secret');
+  const HEADERS = { 'X-Admin-Secret': SECRET };
+  const API = '/api/v1/management-internal';
+  const ADMIN_PLAYER_API = '/api/v1/rc-internal-mgmt/players'; // used for PUT (update)
+  const FIXTURE_API = '/api/v1/rc-internal-mgmt/fixture';
+
+  (function checkAuth() {
+    if (!SECRET) {
+      document.getElementById('admin-status').textContent = '⛔ Not authenticated';
+      document.getElementById('admin-status').style.color = '#ef4444';
+      setTimeout(() => { location.href = '/royal-classico/entrance'; }, 1500);
+    } else {
+      document.getElementById('admin-status').textContent = '✅ Admin Mode';
+      document.getElementById('admin-status').style.color = '#22c55e';
+    }
+  })();
+
+  /* ── Modal helpers & form utilities ───────────────────── */
+  function openModal(id)  { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  function previewImg(input, previewId) {
+    const f = input.files && input.files[0]; if (!f) return;
+    const img = document.getElementById(previewId);
+    img.src = URL.createObjectURL(f); img.style.display = 'block';
+  }
+
+  function clearPlayerForm() {
+    // Clear inputs and preview, set modal title to Add
+    const ids = ['p_name','p_jerseyName','p_tacticalRole','p_age','p_jerseyNumber'];
+    ids.forEach(i => { const el = document.getElementById(i); if (el) el.value = ''; });
+    document.querySelectorAll('.poschk').forEach(c => c.checked = false);
+    const img = document.getElementById('p_preview'); if (img) { img.src = ''; img.style.display = 'none'; }
+    const fileIn = document.getElementById('p_image'); if (fileIn) fileIn.value = '';
+    // remove hidden id if present
+    const hid = document.getElementById('p_id'); if (hid) hid.remove();
+    // set modal title
+    const title = document.querySelector('#playerModal .modal-title'); if (title) title.textContent = '➕ Add Player';
+  }
+
+  function openEditModal(player) {
+    clearPlayerForm();
+    const title = document.querySelector('#playerModal .modal-title'); if (title) title.textContent = '✏ Edit Player';
+    // populate fields
+    document.getElementById('p_name').value = player.name || '';
+    document.getElementById('p_jerseyName').value = player.jerseyName || '';
+    document.getElementById('p_tacticalRole').value = player.tacticalRole || '';
+    document.getElementById('p_age').value = player.age || '';
+    document.getElementById('p_jerseyNumber').value = player.jerseyNumber || '';
+    // positions
+    document.querySelectorAll('.poschk').forEach(ch => {
+      ch.checked = Array.isArray(player.positions) && player.positions.includes(ch.value);
+    });
+    // preview
+    const img = document.getElementById('p_preview');
+    if (player.imagePath) {
+      const src = (player.imagePath.startsWith('/') || player.imagePath.startsWith('http')) ? player.imagePath : ('/uploads/' + player.imagePath);
+      img.src = src; img.style.display = 'block';
+    } else {
+      img.src = ''; img.style.display = 'none';
+    }
+    // hidden id
+    let hid = document.getElementById('p_id');
+    if (!hid) {
+      hid = document.createElement('input'); hid.type = 'hidden'; hid.id = 'p_id';
+      document.querySelector('#playerModal form').appendChild(hid);
+    }
+    hid.value = player.id;
+    openModal('playerModal');
+  }
+
+  /* ── Players ─────────────────────────────────────── */
+  function loadPlayers() {
+    fetch(API + '/players', { headers: HEADERS })
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(list => {
+        const grid = document.getElementById('playersGrid');
+        grid.innerHTML = '';
+        // ensure list is an array
+        list = Array.isArray(list) ? list : [];
+        list.forEach(p => {
+          const card = document.createElement('div');
+          card.className = 'p-card';
+
+          // Robust field fallbacks
+          const name = p.name || p.realName || p.fullName || '—';
+          const jerseyName = p.jerseyName || p.shirtName || '';
+          const jerseyNumber = (p.jerseyNumber !== undefined && p.jerseyNumber !== null) ? p.jerseyNumber : '?';
+          const age = (p.age !== undefined && p.age !== null) ? p.age : '';
+          const tactical = p.tacticalRole || p.tactical_role || p.role || '';
+
+          // Robust image path resolver
+          function getImageUrl(ip) {
+            if (!ip) return null;
+            let path = ip.toString().replace(/\\\\/g, '/').trim();
+            if (path.startsWith('http://') || path.startsWith('https://')) return path;
+            if (path.startsWith('/')) {
+              // if already starts with /uploads or /images, return as-is
+              if (path.startsWith('/uploads/') || path.startsWith('/images/')) return path;
+              // if it contains /uploads/ somewhere, return from that segment
+              const uidx = path.indexOf('/uploads/');
+              if (uidx >= 0) return path.substring(uidx);
+              return path; // best-effort
+            }
+            // if starts with uploads/ -> /uploads/...
+            if (path.startsWith('uploads/')) return '/' + path;
+            // if contains uploads/ in middle
+            const mid = path.indexOf('uploads/');
+            if (mid >= 0) return '/' + path.substring(mid);
+            // if starts with players/ or news/ -> /uploads/players/...
+            if (path.startsWith('players/') || path.startsWith('news/')) return '/uploads/' + path;
+            // if contains /players/ segment
+            const pseg = path.indexOf('players/');
+            if (pseg >= 0) return '/uploads/' + path.substring(pseg);
+            // fallback to using basename under /uploads/
+            const base = path.substring(path.lastIndexOf('/') + 1);
+            return '/uploads/' + base;
+          }
+
+          let imgSrc = getImageUrl(p.imagePath);
+
+          const imgHtml = imgSrc ? `<div class="img-wrap"><img src="${imgSrc}" onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg'"/></div>` : `<div class="img-wrap"><div style="font-size:2rem;">👤</div></div>`;
+
+          const nameHtml = `<div class="p-name">${escapeHtml(name)}</div>`;
+          const subHtml = `<div class="p-sub">${escapeHtml(jerseyName ? jerseyName + ' · ' : '')}#${escapeHtml(String(jerseyNumber))} · ${age ? (escapeHtml(String(age)) + ' yrs') : '—'}</div>`;
+          const roleHtml = tactical ? `<small style="display:block;font-size:0.72rem;color:#C5A065;margin-top:4px">${escapeHtml(tactical)}</small>` : '';
+
+          card.innerHTML = imgHtml + nameHtml + subHtml + roleHtml;
+
+          // actions container
+          const actions = document.createElement('div'); actions.style.display = 'flex'; actions.style.gap = '0.5rem'; actions.style.marginTop = '6px';
+          const editBtn = document.createElement('button'); editBtn.className = 'btn btn-ghost'; editBtn.style.fontSize = '0.72rem'; editBtn.textContent = 'Edit';
+          editBtn.addEventListener('click', () => openEditModal(p));
+          const delBtn = document.createElement('button'); delBtn.className = 'btn btn-danger'; delBtn.style.fontSize = '0.72rem'; delBtn.textContent = 'Delete';
+          delBtn.addEventListener('click', () => deletePlayer(p.id));
+          actions.appendChild(editBtn); actions.appendChild(delBtn);
+          card.appendChild(actions);
+
+          grid.appendChild(card);
+        });
+
+        // Append Add card (always visible)
+        const add = document.createElement('div');
+        add.className = 'add-card'; add.innerHTML = '<span style="font-size:2.2rem;line-height:1">+</span>';
+        add.onclick = () => { clearPlayerForm(); openModal('playerModal'); };
+        grid.appendChild(add);
+      })
+      .catch(err => console.error('Load players failed:', err));
+  }
+
+  function submitPlayer(event) {
+    event.preventDefault();
+    const name = document.getElementById('p_name').value.trim();
+    const jerseyNumber = document.getElementById('p_jerseyNumber').value.trim();
+    if (!name || !jerseyNumber) { alert('Name and Jersey Number are required.'); return; }
+
+    const positions = Array.from(document.querySelectorAll('.poschk:checked')).map(c => c.value);
+    const file = document.getElementById('p_image').files[0];
+
+    const fd = new FormData();
+    fd.append('name', name);
+    fd.append('jerseyName', document.getElementById('p_jerseyName').value.trim());
+    fd.append('age', document.getElementById('p_age').value.trim());
+    fd.append('jerseyNumber', jerseyNumber);
+    fd.append('positions', positions.join(','));
+    fd.append('tacticalRole', document.getElementById('p_tacticalRole').value.trim());
+    if (file) fd.append('image', file);
+
+    // If editing, use PUT to the admin players endpoint
+    const hid = document.getElementById('p_id');
+    const isEdit = hid && hid.value;
+    const url = isEdit ? (ADMIN_PLAYER_API + '/' + hid.value) : (API + '/players');
+    const method = isEdit ? 'PUT' : 'POST';
+
+    fetch(url, { method: method, headers: HEADERS, body: fd })
+      .then(r => r.text().then(body => ({ ok: r.ok, body })))
+      .then(({ ok, body }) => {
+        if (!ok) throw new Error(body || 'Unknown error');
+        closeModal('playerModal');
+        loadPlayers();
+      })
+      .catch(err => alert('❌ Save player failed:\n' + err.message));
+  }
+
+  function deletePlayer(id) {
+    if (!confirm('Delete this player?')) return;
+    fetch(API + '/players/' + id, { method: 'DELETE', headers: HEADERS })
+      .then(r => { if (r.ok) loadPlayers(); else r.text().then(b => alert('Delete failed: ' + b)); })
+      .catch(err => alert('Error: ' + err.message));
+  }
+
+  /* ── News ────────────────────────────────────────── */
+  function loadNews() {
+    fetch(API + '/news', { headers: HEADERS })
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(list => {
+        const container = document.getElementById('newsList');
+        container.innerHTML = '';
+        if (!list.length) { container.innerHTML = '<p style="color:#8a9bbf;font-size:0.85rem;">No news posts yet.</p>'; return; }
+        list.forEach(n => {
+          const el = document.createElement('div');
+          el.className = 'news-item';
+          el.innerHTML = `
+            <div>
+              <div class="n-title">${escapeHtml(n.title || '')}</div>
+              <div class="n-body">${escapeHtml((n.content || '').substring(0, 80))}…</div>
+            </div>
+            <button class="btn btn-danger" style="font-size:0.72rem;padding:4px 10px;white-space:nowrap;" onclick="deleteNews('${n.id}')">Delete</button>`;
+          container.appendChild(el);
+        });
+      })
+      .catch(err => console.error('Load news failed:', err));
+  }
+
+  function submitNews(event) {
+    event.preventDefault();
+    const title = document.getElementById('n_title').value.trim();
+    const content = document.getElementById('n_content').value.trim();
+    if (!title || !content) { alert('Title and content are required.'); return; }
+
+    const fd = new FormData();
+    fd.append('title', title);
+    fd.append('content', content);
+    const file = document.getElementById('n_image').files[0];
+    if (file) fd.append('image', file);
+
+    fetch(API + '/news', { method: 'POST', headers: HEADERS, body: fd })
+      .then(r => r.text().then(body => ({ ok: r.ok, body })))
+      .then(({ ok, body }) => {
+        if (!ok) throw new Error(body || 'Unknown error');
+        closeModal('newsModal');
+        loadNews();
+      })
+      .catch(err => alert('❌ Publish news failed:\n' + err.message));
+  }
+
+  function deleteNews(id) {
+    if (!confirm('Delete this news post?')) return;
+    fetch(API + '/news/' + id, { method: 'DELETE', headers: HEADERS })
+      .then(r => { if (r.ok) loadNews(); else r.text().then(b => alert('Delete failed: ' + b)); })
+      .catch(err => alert('Error: ' + err.message));
+  }
+
+  /* ── Toggle finished fields ───────────────────────────── */
+  function toggleFinishedFields(checked) {
+    const el = document.getElementById('finished-fields');
+    if (el) el.style.display = checked ? 'grid' : 'none';
+  }
+
+  /* ── Fixture ─────────────────────────────────────── */
+  function loadBannerFixture() {
+    fetch(FIXTURE_API + '/banner', { headers: HEADERS })
+      .then(r => { if (r.status === 404 || r.status === 204) return null; return r.json(); })
+      .then(f => {
+        const display = document.getElementById('fixtureDisplay');
+        if (f && f.rivalTeam) {
+          document.getElementById('fc-match').textContent = 'Royal Classico ' + (f.result || 'vs') + ' ' + f.rivalTeam;
+          document.getElementById('fc-meta').textContent = (f.date || '') + ' · ' + (f.time || '') + ' · ' + (f.stadium || '');
+          display.style.display = 'flex';
+        } else {
+          display.style.display = 'none';
+        }
+      })
+      .catch(() => document.getElementById('fixtureDisplay').style.display = 'none');
+  }
+
+  function loadAllFixtures() {
+    fetch(FIXTURE_API + '/all', { headers: HEADERS })
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(list => {
+        let container = document.getElementById('manageFixtures');
+        if (!container) {
+          container = document.createElement('div');
+          container.id = 'manageFixtures';
+          document.querySelector('.fixture-section').appendChild(container);
+        }
+        if (!list.length) {
+          container.innerHTML = '<p style="color:#8a9bbf;margin-top:0.75rem;">No fixtures yet.</p>';
+          return;
+        }
+        const rows = list.map(f => {
+          return `<div style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0;border-bottom:1px dashed rgba(255,255,255,0.03);">
+            <div style="flex:1">
+              <div style="font-weight:500">${escapeHtml(f.rivalTeam)} · ${escapeHtml(f.date)} ${escapeHtml(f.time || '')}</div>
+              <div style="font-size:0.85rem;color:#8a9bbf">${escapeHtml(f.stadium || '')} ${f.isFinished ? ' · Result: ' + escapeHtml(f.result || '') : ''}</div>
+            </div>
+            <div style="display:flex;gap:0.5rem;margin-left:1rem">
+              <button class="btn btn-ghost" onclick="editFixture('${f.id}')">Edit</button>
+              <button class="btn btn-danger" onclick="deleteFixture('${f.id}')">Delete</button>
+            </div>
+          </div>`;
+        }).join('');
+        container.innerHTML = '<p class="section-title" style="margin-top:1rem;">Manage All Fixtures</p>' + rows;
+      })
+      .catch(err => console.error('Load fixtures failed:', err));
+  }
+
+  function saveFixture(event) {
+    event.preventDefault();
+    const finished = document.getElementById('f_finished').checked;
+    const ftScore  = document.getElementById('f_ftScore') ? document.getElementById('f_ftScore').value.trim() : '';
+    const id = document.getElementById('f_id') ? document.getElementById('f_id').value.trim() : '';
+    const body = {
+      id:           id || null,
+      rivalTeam:    document.getElementById('f_rival').value.trim(),
+      stadium:      document.getElementById('f_stadium').value.trim(),
+      date:         document.getElementById('f_date').value,
+      time:         document.getElementById('f_time').value,
+      result:       finished && ftScore ? ftScore : (document.getElementById('f_result').value.trim() || 'vs'),
+      isFinished:   finished,
+      goalScorers:  document.getElementById('f_goalScorers') ? document.getElementById('f_goalScorers').value.trim() : ''
+    };
+    if (!body.rivalTeam || !body.date || !body.time) { alert('Rival team, date and time are required.'); return; }
+
+    const method = body.id ? 'PUT' : 'POST';
+    fetch(FIXTURE_API, { method: method, headers: { ...HEADERS, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(r => r.text().then(t => ({ ok: r.ok, t })))
+      .then(({ ok, t }) => {
+        if (!ok) throw new Error(t);
+        alert('✅ Fixture ' + (method === 'POST' ? 'created' : 'updated') + '!');
+        if (document.getElementById('f_id')) document.getElementById('f_id').value = '';
+        loadBannerFixture(); loadAllFixtures();
+      })
+      .catch(err => alert('❌ Save fixture failed:\n' + err.message));
+  }
+
+  function editFixture(id) {
+    fetch(FIXTURE_API + '/all', { headers: HEADERS })
+      .then(r => r.json())
+      .then(list => {
+        const f = list.find(x => x.id === id); if (!f) return alert('Fixture not found');
+        let idEl = document.getElementById('f_id');
+        if (!idEl) {
+          idEl = document.createElement('input'); idEl.type = 'hidden'; idEl.id = 'f_id';
+          document.getElementById('fixtureForm').appendChild(idEl);
+        }
+        idEl.value = f.id;
+        document.getElementById('f_rival').value   = f.rivalTeam || '';
+        document.getElementById('f_stadium').value = f.stadium || '';
+        document.getElementById('f_date').value    = f.date || '';
+        document.getElementById('f_time').value    = f.time || '';
+        document.getElementById('f_result').value  = f.result || 'vs';
+        const fin = f.isFinished || false;
+        document.getElementById('f_finished').checked = fin;
+        toggleFinishedFields(fin);
+        if (document.getElementById('f_ftScore') && f.result && f.result !== 'vs') {
+          document.getElementById('f_ftScore').value = f.result;
+        }
+        if (document.getElementById('f_goalScorers') && f.goalScorers) {
+          document.getElementById('f_goalScorers').value = f.goalScorers;
+        }
+      })
+      .catch(err => console.error('Edit fixture failed', err));
+  }
+
+  function deleteFixture(id) {
+    if (!confirm('Delete this fixture?')) return;
+    fetch(FIXTURE_API + '/' + id, { method: 'DELETE', headers: HEADERS })
+      .then(r => { if (r.ok) { loadAllFixtures(); loadBannerFixture(); } else r.text().then(b => alert('Delete failed: ' + b)); })
+      .catch(err => alert('Error: ' + err.message));
+  }
+
+  function escapeHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  /* ── Init ────────────────────────────────────────── */
+  document.addEventListener('DOMContentLoaded', function () {
+    if (SECRET) { loadPlayers(); loadNews(); loadBannerFixture(); loadAllFixtures(); }
+  });
+</script>
+</body>
+</html>
