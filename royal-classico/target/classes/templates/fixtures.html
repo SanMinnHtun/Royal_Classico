@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fixtures &amp; Results — Royal Classico FC</title>
+  <meta name="description" content="All upcoming fixtures and past results for Royal Classico FC — Sintkaing Football Club. EST. 2026."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+
+<!-- ══ NAVBAR ══════════════════════════════════════════════ -->
+<nav class="navbar">
+  <div class="navbar__inner">
+    <a href="/" class="navbar__brand">
+      <img th:src="@{/images/logo.png}" alt="Royal Classico FC Logo" class="navbar__crest" style="height:60px;object-fit:contain;"/>
+      <span class="navbar__name">Royal Classico</span>
+    </a>
+    <ul class="navbar__links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/squad">Squad</a></li>
+      <li><a href="/news">News</a></li>
+      <li><a href="/fixtures" class="active">Fixtures</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ══ PAGE HERO ════════════════════════════════════════════ -->
+<section class="page-hero">
+  <div class="container">
+    <p class="page-hero__eyebrow">Season 2025 / 2026</p>
+    <h1>Fixtures &amp; <span class="gold">Results</span></h1>
+  </div>
+</section>
+
+<!-- ══ FIXTURES CONTENT ════════════════════════════════════ -->
+<section class="fixtures-section">
+  <div class="container">
+
+    <!-- Tab switcher -->
+    <div class="fixtures-tabs" id="fixtures-tabs">
+      <button class="fixtures-tab active" id="tab-upcoming" onclick="switchTab('upcoming')">Upcoming Matches</button>
+      <button class="fixtures-tab" id="tab-results" onclick="switchTab('results')">Past Results</button>
+    </div>
+
+    <!-- Upcoming Matches Table -->
+    <div id="panel-upcoming">
+      <div id="upcoming-content">
+        <div style="overflow-x:auto;">
+          <table class="fixtures-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Kick-off</th>
+                <th>Home</th>
+                <th>Result</th>
+                <th>Away</th>
+                <th>Venue</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="match : ${upcomingMatches}">
+                <td th:text="${match.date}">2026-06-15</td>
+                <td th:text="${match.time}">15:00</td>
+                <td><strong>Royal Classico</strong></td>
+                <td style="text-align:center;"> <span th:text="${match.result != null and !match.isFinished ? 'TBD' : (match.result != null ? match.result : '—')}">TBD</span> </td>
+                <td th:text="${match.rivalTeam}">Rival</td>
+                <td th:text="${match.stadium}">Stadium</td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(upcomingMatches)}">
+                <td colspan="6">
+                  <div class="empty-state">
+                    <div class="empty-state__icon">📅</div>
+                    <p class="empty-state__text">No upcoming fixtures announced.</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Past Results Table -->
+    <div id="panel-results" style="display:none;">
+      <div id="results-content">
+        <div style="overflow-x:auto;">
+          <table class="fixtures-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Kick-off</th>
+                <th>Home</th>
+                <th>Score</th>
+                <th>Away</th>
+                <th>Venue</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="match : ${pastResults}">
+                <td th:text="${match.date}">2026-06-01</td>
+                <td th:text="${match.time}">14:00</td>
+                <td><strong>Royal Classico</strong></td>
+                <td style="text-align:center;">
+                  <span th:text="${match.result != null ? match.result : '—'}">2-1</span>
+                  <div th:if="${match.goalScorers}" class="fixture-scorers">⚽ <span th:text="${match.goalScorers}">Aung Ko</span></div>
+                </td>
+                <td th:text="${match.rivalTeam}">Rivals</td>
+                <td th:text="${match.stadium}">Stadium</td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(pastResults)}">
+                <td colspan="6">
+                  <div class="empty-state">
+                    <div class="empty-state__icon">📋</div>
+                    <p class="empty-state__text">No results recorded yet.</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ FOOTER ══════════════════════════════════════════════ -->
+<footer>
+  <div class="container footer__inner">
+    <img th:src="@{/images/logo.png}" alt="Royal Classico FC Logo" class="footer__crest"/>
+    <div class="footer__brand">Royal Classico FC</div>
+    <p class="footer__est">Est. 2026 &mdash; Amateur Football Club</p>
+    <nav class="footer__links">
+      <a href="/">Home</a>
+      <a href="/squad">Squad</a>
+      <a href="/news">News</a>
+      <a href="/fixtures">Fixtures</a>
+    </nav>
+    <div class="footer__divider"></div>
+    <p class="footer__copy">
+      &copy; 2026 Royal Classico Football Club. All rights reserved.
+    </p>
+  </div>
+</footer>
+
+<script th:src="@{/js/main.js}"></script>
+<script>
+  // Minimal page script: tab switching handled client-side
+  function switchTab(tab) {
+    document.getElementById('tab-upcoming').classList.toggle('active', tab === 'upcoming');
+    document.getElementById('tab-results').classList.toggle('active', tab === 'results');
+    document.getElementById('panel-upcoming').style.display = tab === 'upcoming' ? '' : 'none';
+    document.getElementById('panel-results').style.display  = tab === 'results'  ? '' : 'none';
+  }
+  window.switchTab = switchTab;
+</script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>News — Royal Classico FC</title>
+  <meta name="description" content="All the latest news and updates from Royal Classico Football Club. EST. 2026."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" th:href="@{/css/style.css}"/>
+  <style>
+    /* News-page specific extras */
+    .news-archive-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    @media (min-width: 768px) {
+      .news-archive-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 1024px) {
+      .news-archive-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .news-archive-card {
+      background: var(--clr-surface);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+    .news-archive-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0 32px rgba(197,160,101,0.18);
+      border-color: var(--clr-gold-dim);
+    }
+
+    .news-archive-card__img {
+      width: 100%;
+      height: 210px;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+      display: block;
+    }
+    .news-archive-card:hover .news-archive-card__img { transform: scale(1.04); }
+
+    .news-archive-card__placeholder {
+      width: 100%;
+      height: 210px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      background: linear-gradient(135deg, var(--clr-surface-2), var(--clr-bg));
+      color: var(--clr-muted);
+    }
+
+    .news-archive-card__body { padding: 1.4rem; }
+
+    .news-archive-card__date {
+      font-size: 0.68rem;
+      color: var(--clr-gold);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+      font-family: var(--ff-body);
+      font-weight: 600;
+    }
+
+    /* Playfair Display headlines for the "Royal" feel */
+    .news-archive-card__title {
+      font-family: 'Inter', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+      color: var(--clr-text);
+    }
+
+    .news-archive-card__body p {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: var(--clr-muted);
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ NAVBAR ══════════════════════════════════════════════ -->
+<nav class="navbar">
+  <div class="navbar__inner">
+    <a href="/" class="navbar__brand">
+      <img th:src="@{/images/logo.png}" alt="Royal Classico FC Logo" class="navbar__crest" style="height:60px;object-fit:contain;"/>
+      <span class="navbar__name">Royal Classico</span>
+    </a>
+    <ul class="navbar__links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/squad">Squad</a></li>
+      <li><a href="/news" class="active">News</a></li>
+      <li><a href="/fixtures">Fixtures</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ══ PAGE HERO ════════════════════════════════════════════ -->
+<section class="page-hero">
+  <div class="container">
+    <p class="page-hero__eyebrow">Club Updates</p>
+    <h1>Latest <span class="gold">News</span></h1>
+  </div>
+</section>
+
+<!-- ══ FIXTURE STRIP ════════════════════════════════════════ -->
+<div th:if="${nextFixture != null}" class="fixture-banner">
+  <div class="container fixture-banner__inner">
+    <div class="fixture-banner__label">Next Match</div>
+    <div class="fixture-banner__match">
+      <span class="fixture-banner__team">Royal Classico</span>
+      <span class="fixture-banner__vs" th:text="${nextFixture.result ?: 'vs'}">vs</span>
+      <span class="fixture-banner__team" th:text="${nextFixture.rivalTeam}">Rival Team</span>
+    </div>
+    <div class="fixture-banner__meta">
+      <div class="fixture-meta-item">
+        <span>Date</span>
+        <span th:text="${nextFixture.date}">Date</span>
+      </div>
+      <div class="fixture-meta-item">
+        <span>Kick-off</span>
+        <span th:text="${nextFixture.time}">Time</span>
+      </div>
+      <div class="fixture-meta-item">
+        <span>Venue</span>
+        <span th:text="${nextFixture.stadium}">Stadium</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ NEWS ARCHIVE ═════════════════════════════════════════ -->
+<section>
+  <div class="container">
+    <div th:if="${not #lists.isEmpty(newsPosts)}" class="news-archive-grid">
+      <article th:each="post : ${newsPosts}" class="news-archive-card">
+        <div style="overflow:hidden;">
+          <img th:if="${post.imagePath != null}"
+               th:src="@{/uploads/{p}(p=${post.imagePath})}"
+               th:alt="${post.title}"
+               class="news-archive-card__img"/>
+          <div th:if="${post.imagePath == null}"
+               class="news-archive-card__placeholder">⚽</div>
+        </div>
+        <div class="news-archive-card__body">
+          <p class="news-archive-card__date"
+             th:text="${#temporals.format(post.createdAt, 'dd MMM yyyy · HH:mm')}">Date</p>
+          <h2 class="news-archive-card__title" th:text="${post.title}">Title</h2>
+          <p th:text="${post.content}">Content</p>
+        </div>
+      </article>
+    </div>
+
+    <div th:if="${#lists.isEmpty(newsPosts)}" class="empty-state">
+      <div class="empty-state__icon">📋</div>
+      <p class="empty-state__text">No news articles yet. Check back soon!</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══════════════════════════════════════════════ -->
+<footer>
+  <div class="container footer__inner">
+    <img th:src="@{/images/photo_2026-04-26_23-43-31.jpg}" alt="Royal Classico FC" class="footer__crest"/>
+    <div class="footer__brand">Royal Classico FC</div>
+    <p class="footer__est">Est. 2026 &mdash; Amateur Football Club</p>
+    <nav class="footer__links">
+      <a href="/">Home</a>
+      <a href="/squad">Squad</a>
+      <a href="/news">News</a>
+      <a href="/fixtures">Fixtures</a>
+    </nav>
+    <div class="footer__divider"></div>
+    <p class="footer__copy">
+      &copy; 2026 Royal Classico Football Club. All rights reserved.
+    </p>
+  </div>
+</footer>
+
+<script th:src="@{/js/main.js}"></script>
+<script th:src="@{/js/admin.js}"></script>
+</body>
+</html>
