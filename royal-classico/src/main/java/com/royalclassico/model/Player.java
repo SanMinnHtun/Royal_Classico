@@ -35,6 +35,9 @@ public class Player {
     /** Relative web path, e.g. "/uploads/players/image.jpg" */
     private String imagePath;
 
+    /** ImageKit file identifier (remote) — used for deletion from the cloud */
+    private String imageFileId;
+
     /** Multiple allowed positions as plain strings: GK, DEF, MID, FWD */
     private List<String> positions;
 

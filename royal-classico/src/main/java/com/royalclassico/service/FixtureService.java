@@ -7,6 +7,7 @@ import com.royalclassico.repository.NextFixtureRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +22,7 @@ public class FixtureService {
 
     private final FixtureRepository fixtureRepository;
     private final NextFixtureRepository nextFixtureRepository;
+    private final FileService fileService;
 
     /** Returns the closest upcoming fixture (banner) */
     public Optional<Fixture> getNextUpcomingFixture() {
@@ -46,6 +48,31 @@ public class FixtureService {
         Fixture saved = fixtureRepository.save(fixture);
         log.info("Created fixture: Royal Classico vs {} on {}", saved.getRivalTeam(), saved.getDate());
         return saved;
+    }
+
+    /** Create a new fixture with optional image — ensures upload is attempted and fixture is saved even on upload failure */
+    public Fixture createFixtureWithImage(Fixture fixture, MultipartFile image) {
+        fixture.setId(null);
+        if (image != null && !image.isEmpty()) {
+            try {
+                FileService.UploadResult ur = fileService.uploadToCloud(image, "fixtures");
+                if (ur != null && ur.url != null && !ur.url.isBlank()) {
+                    fixture.setImagePath(ur.url);
+                    fixture.setImageFileId(ur.fileId);
+                } else {
+                    log.warn("ImageKit returned empty URL for fixture image; using placeholder and saving");
+                    fixture.setImagePath("/images/default-logo.png");
+                    // Force save immediately
+                    return saveAndSyncNext(fixture);
+                }
+            } catch (Exception e) {
+                log.error("Failed to upload fixture image to ImageKit; saving fixture with placeholder", e);
+                fixture.setImagePath("/images/default-logo.png");
+                // Force save even if image upload failed
+                return saveAndSyncNext(fixture);
+            }
+        }
+        return saveAndSyncNext(fixture);
     }
 
     /** Save fixture and synchronize next_fixture collection according to isFinished */
@@ -83,6 +110,14 @@ public class FixtureService {
     }
 
     public void deleteFixtureById(String id) {
+        // Attempt to remove any remote image associated with this fixture
+        fixtureRepository.findById(id).ifPresent(f -> {
+            if (f.getImageFileId() != null && !f.getImageFileId().isBlank()) {
+                fileService.deleteRemoteByFileId(f.getImageFileId());
+            } else if (f.getImagePath() != null) {
+                fileService.deleteFile(f.getImagePath());
+            }
+        });
         fixtureRepository.deleteById(id);
         log.info("Deleted fixture id={}", id);
     }

@@ -86,14 +86,14 @@
 <!-- NAVBAR -->
 <nav class="navbar">
   <div class="navbar__inner">
-    <a href="/" class="navbar__brand">
-      <img th:src="@{/images/photo_2026-04-26_23-43-31.jpg}" alt="Royal Classico FC Logo" class="navbar__crest" style="height:60px;object-fit:contain;"/>
+    <a href="#" th:href="@{/}" class="navbar__brand">
+      <img src="" th:src="@{/images/photo_2026-04-26_23-43-31.jpg}" alt="Royal Classico FC Logo" class="navbar__crest" style="height:60px;object-fit:contain;"/>
       <span class="navbar__name">Royal Classico</span>
     </a>
     <ul class="navbar__links">
-      <li><a href="/">Home</a></li>
-      <li><a href="/squad" class="active">Squad</a></li>
-      <li><a href="/news">News</a></li>
+      <li><a href="#" th:href="@{/}">Home</a></li>
+      <li><a href="#" th:href="@{/squad}" class="active">Squad</a></li>
+      <li><a href="#" th:href="@{/news}">News</a></li>
     </ul>
   </div>
 </nav>
@@ -114,17 +114,11 @@
           <div class="player-card__img-wrap">
 
             <!-- Force absolute path starting with / so it works on /squad -->
-            <img th:if="${player.imagePath != null}"
-                 th:src="@{/uploads/{path}(path=${player.imagePath})}"
+            <img src=""
+                 th:src="${player.imagePath != null ? player.imagePath : '/images/default-logo.png'}"
+                 alt="Player"
                  th:alt="${player.name}"
-                 class="player-card__img"
-                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
-
-            <img th:if="${player.imagePath == null}"
-                 th:src="@{/images/photo_2026-04-26_23-43-31.jpg}"
-                 th:alt="${player.name}"
-                 class="player-card__img"
-                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
+                 class="player-card__img" />
 
             <span class="player-card__number" th:text="${player.jerseyNumber != null ? player.jerseyNumber : ''}"></span>
           </div>
@@ -154,17 +148,11 @@
       <div th:each="player : ${defPlayers}">
         <div class="player-card">
           <div class="player-card__img-wrap">
-            <img th:if="${player.imagePath != null}"
-                 th:src="@{/uploads/{path}(path=${player.imagePath})}"
+            <img src=""
+                 th:src="${player.imagePath != null ? player.imagePath : '/images/default-logo.png'}"
+                 alt="Player"
                  th:alt="${player.name}"
-                 class="player-card__img"
-                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
-
-            <img th:if="${player.imagePath == null}"
-                 th:src="@{/images/photo_2026-04-26_23-43-31.jpg}"
-                 th:alt="${player.name}"
-                 class="player-card__img"
-                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
+                 class="player-card__img" />
 
             <span class="player-card__number" th:text="${player.jerseyNumber != null ? player.jerseyNumber : ''}"></span>
           </div>
@@ -193,17 +181,11 @@
       <div th:each="player : ${midPlayers}">
         <div class="player-card">
           <div class="player-card__img-wrap">
-            <img th:if="${player.imagePath != null}"
-                 th:src="@{/uploads/{path}(path=${player.imagePath})}"
+            <img src=""
+                 th:src="${player.imagePath != null ? player.imagePath : '/images/default-logo.png'}"
+                 alt="Player"
                  th:alt="${player.name}"
-                 class="player-card__img"
-                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
-
-            <img th:if="${player.imagePath == null}"
-                 th:src="@{/images/photo_2026-04-26_23-43-31.jpg}"
-                 th:alt="${player.name}"
-                 class="player-card__img"
-                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
+                 class="player-card__img" />
 
             <span class="player-card__number" th:text="${player.jerseyNumber != null ? player.jerseyNumber : ''}"></span>
           </div>
@@ -233,17 +215,11 @@
       <div th:each="player : ${fwdPlayers}">
         <div class="player-card">
           <div class="player-card__img-wrap">
-            <img th:if="${player.imagePath != null}"
-                 th:src="@{/uploads/{path}(path=${player.imagePath})}"
+            <img src=""
+                 th:src="${player.imagePath != null ? player.imagePath : '/images/default-logo.png'}"
+                 alt="Player"
                  th:alt="${player.name}"
-                 class="player-card__img"
-                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
-
-            <img th:if="${player.imagePath == null}"
-                 th:src="@{/images/photo_2026-04-26_23-43-31.jpg}"
-                 th:alt="${player.name}"
-                 class="player-card__img"
-                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
+                 class="player-card__img" />
 
             <span class="player-card__number" th:text="${player.jerseyNumber != null ? player.jerseyNumber : ''}"></span>
           </div>
@@ -273,17 +249,11 @@
       <div th:each="player : ${otherPlayers}">
         <div class="player-card">
           <div class="player-card__img-wrap">
-            <img th:if="${player.imagePath != null}"
-                 th:src="@{/uploads/{path}(path=${player.imagePath})}"
+            <img src=""
+                 th:src="${player.imagePath != null ? player.imagePath : '/images/default-logo.png'}"
+                 alt="Player"
                  th:alt="${player.name}"
-                 class="player-card__img"
-                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
-
-            <img th:if="${player.imagePath == null}"
-                 th:src="@{/images/photo_2026-04-26_23-43-31.jpg}"
-                 th:alt="${player.name}"
-                 class="player-card__img"
-                 onerror="this.onerror=null;this.src='/images/photo_2026-04-26_23-43-31.jpg';this.style.objectFit='contain';" />
+                 class="player-card__img" />
 
             <span class="player-card__number" th:text="${player.jerseyNumber != null ? player.jerseyNumber : ''}"></span>
           </div>
@@ -313,9 +283,9 @@
     <div class="footer__brand">Royal Classico FC</div>
     <p class="footer__est">Est. 2026 &mdash; Amateur Football Club</p>
     <nav class="footer__links">
-      <a href="/">Home</a>
-      <a href="/squad">Squad</a>
-      <a href="/news">News</a>
+      <a href="#" th:href="@{/}">Home</a>
+      <a href="#" th:href="@{/squad}">Squad</a>
+      <a href="#" th:href="@{/news}">News</a>
     </nav>
     <div class="footer__divider"></div>
     <p class="footer__copy">&copy; 2026 Royal Classico Football Club. All rights reserved.</p>

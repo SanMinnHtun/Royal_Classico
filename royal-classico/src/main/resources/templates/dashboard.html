@@ -596,20 +596,22 @@
     const finished = document.getElementById('f_finished').checked;
     const ftScore  = document.getElementById('f_ftScore') ? document.getElementById('f_ftScore').value.trim() : '';
     const id = document.getElementById('f_id') ? document.getElementById('f_id').value.trim() : '';
-    const body = {
-      id:           id || null,
-      rivalTeam:    document.getElementById('f_rival').value.trim(),
-      stadium:      document.getElementById('f_stadium').value.trim(),
-      date:         document.getElementById('f_date').value,
-      time:         document.getElementById('f_time').value,
-      result:       finished && ftScore ? ftScore : (document.getElementById('f_result').value.trim() || 'vs'),
-      isFinished:   finished,
-      goalScorers:  document.getElementById('f_goalScorers') ? document.getElementById('f_goalScorers').value.trim() : ''
-    };
-    if (!body.rivalTeam || !body.date || !body.time) { alert('Rival team, date and time are required.'); return; }
 
-    const method = body.id ? 'PUT' : 'POST';
-    fetch(FIXTURE_API, { method: method, headers: { ...HEADERS, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    // Use FormData so the request is multipart/form-data and the browser will set the Content-Type boundary
+    const fd = new FormData();
+    if (id) fd.append('id', id);
+    fd.append('rivalTeam', document.getElementById('f_rival').value.trim());
+    fd.append('stadium', document.getElementById('f_stadium').value.trim());
+    fd.append('date', document.getElementById('f_date').value);
+    fd.append('time', document.getElementById('f_time').value);
+    fd.append('result', finished && ftScore ? ftScore : (document.getElementById('f_result').value.trim() || 'vs'));
+    fd.append('isFinished', finished ? 'true' : 'false');
+    if (document.getElementById('f_goalScorers')) fd.append('goalScorers', document.getElementById('f_goalScorers').value.trim());
+
+    if (!fd.get('rivalTeam') || !fd.get('date') || !fd.get('time')) { alert('Rival team, date and time are required.'); return; }
+
+    const method = fd.get('id') ? 'PUT' : 'POST';
+    fetch(FIXTURE_API, { method: method, headers: HEADERS, body: fd })
       .then(r => r.text().then(t => ({ ok: r.ok, t })))
       .then(({ ok, t }) => {
         if (!ok) throw new Error(t);

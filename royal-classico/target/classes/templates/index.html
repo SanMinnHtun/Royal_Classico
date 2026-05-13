@@ -54,18 +54,15 @@
 </script>
 
 <!-- ══ HERO SLIDER ═════════════════════════════════════════ -->
-<section class="hero">
+<section class="hero" th:if="${newsList != null && !newsList.isEmpty()}">
   <div class="slider" id="main-slider">
 
     <!-- Dynamic slides from DB -->
     <div th:each="post, iter : ${sliderPosts}" class="slide"
          th:classappend="${iter.index == 0} ? ' active' : ''">
-      <img th:if="${post.imagePath != null}"
-           th:src="@{/uploads/{p}(p=${post.imagePath})}"
+      <img th:src="${post.imagePath != null ? post.imagePath : '/images/default-logo.png'}"
            th:alt="${post.title}"
            class="slide__bg"/>
-      <div th:if="${post.imagePath == null}" class="slide__bg"
-           style="background:linear-gradient(135deg,#0A1128 0%,#0f1d3a 50%,#162244 100%);"></div>
       <div class="slide__overlay"></div>
       <div class="slide__content container">
         <span class="slide__tag">Latest News</span>
@@ -75,7 +72,7 @@
       </div>
     </div>
 
-    <!-- Fallback if no posts -->
+    <!-- Fallback if no posts (kept for safety, though outer th:if already hides when empty) -->
     <div th:if="${#lists.isEmpty(sliderPosts)}" class="slide active">
       <div class="slide__bg"
            style="background:linear-gradient(135deg,#0A1128 0%,#003366 60%,#0f1d3a 100%);"></div>
@@ -103,7 +100,7 @@
 </section>
 
 <!-- ══ FIXTURE BANNER ══════════════════════════════════════ -->
-<div class="fixture-banner">
+<div class="fixture-banner" th:if="${nextMatch != null}">
   <div class="container fixture-banner__inner">
     <div class="fixture-banner__label">Next Match</div>
     <div class="fixture-banner__match" th:if="${nextMatch != null}">
@@ -154,8 +151,7 @@
     <div th:if="${not #lists.isEmpty(latestPosts)}" class="news-grid">
       <article th:each="post : ${latestPosts}" class="news-card">
         <div class="news-card__img-wrap">
-          <img th:if="${post.imagePath != null}"
-               th:src="@{/uploads/{p}(p=${post.imagePath})}"
+          <img th:src="${post.imagePath != null ? post.imagePath : 'https://placehold.co/600x400?text=Pending'}"
                th:alt="${post.title}"
                class="news-card__img"/>
           <div th:if="${post.imagePath == null}" class="news-card__img-placeholder">⚽</div>

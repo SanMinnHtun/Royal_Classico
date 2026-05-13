@@ -115,7 +115,7 @@
   </div>
 </section>
 
-<!-- ══ FIXTURE STRIP ════════════════════════════════════════ -->
+<!-- ══ FIXTURE STRIP ═════════════════��══════════════════════ -->
 <div th:if="${nextFixture != null}" class="fixture-banner">
   <div class="container fixture-banner__inner">
     <div class="fixture-banner__label">Next Match</div>
@@ -147,8 +147,7 @@
     <div th:if="${not #lists.isEmpty(newsPosts)}" class="news-archive-grid">
       <article th:each="post : ${newsPosts}" class="news-archive-card">
         <div style="overflow:hidden;">
-          <img th:if="${post.imagePath != null}"
-               th:src="@{/uploads/{p}(p=${post.imagePath})}"
+          <img th:src="${post.imagePath != null ? post.imagePath : '/images/default-logo.png'}"
                th:alt="${post.title}"
                class="news-archive-card__img"/>
           <div th:if="${post.imagePath == null}"

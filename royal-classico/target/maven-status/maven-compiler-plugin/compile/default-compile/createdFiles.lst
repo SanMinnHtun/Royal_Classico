@@ -3,9 +3,11 @@ com\royalclassico\controller\PublicPageController.class
 com\royalclassico\model\Player.class
 com\royalclassico\controller\AdminManagementController.class
 com\royalclassico\model\Fixture.class
+InspectImageKit.class
 com\royalclassico\controller\PublicApiController.class
 com\royalclassico\service\NewsService.class
 com\royalclassico\config\WebMvcConfig.class
+com\royalclassico\service\FileService$UploadResult.class
 com\royalclassico\controller\ManagementApiController.class
 com\royalclassico\repository\FixtureRepository.class
 com\royalclassico\service\PlayerService.class

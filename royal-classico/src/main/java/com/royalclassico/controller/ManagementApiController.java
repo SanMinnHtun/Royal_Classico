@@ -5,6 +5,7 @@ import com.royalclassico.model.Player;
 import com.royalclassico.repository.NewsPostRepository;
 import com.royalclassico.repository.PlayerRepository;
 import com.royalclassico.service.FileService;
+import com.royalclassico.service.PlayerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,8 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,18 +25,22 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api/v1/management-internal")
+@SuppressWarnings("unused")
 public class ManagementApiController {
 
     private final PlayerRepository playerRepository;
     private final NewsPostRepository newsRepository;
     private final FileService fileService;
+    private final PlayerService playerService;
 
     public ManagementApiController(PlayerRepository playerRepository,
                                    NewsPostRepository newsRepository,
-                                   FileService fileService) {
+                                   FileService fileService,
+                                   PlayerService playerService) {
         this.playerRepository = playerRepository;
         this.newsRepository = newsRepository;
         this.fileService = fileService;
+        this.playerService = playerService;
     }
 
     /* ---------------- Players ---------------- */
@@ -74,11 +77,6 @@ public class ManagementApiController {
                 + ", hasImage=" + (image != null && !image.isEmpty()));
 
         try {
-            // Self-healing: ensure uploads/players directory exists before saving
-            Files.createDirectories(Paths.get("uploads", "players"));
-            Files.createDirectories(Paths.get("uploads", "fixtures"));
-            Files.createDirectories(Paths.get("uploads", "news"));
-
             Player p = new Player();
             p.setName(name);
             p.setJerseyName(jerseyName);
@@ -102,33 +100,17 @@ public class ManagementApiController {
             }
 
             if (image != null && !image.isEmpty()) {
-                System.out.println("[ManagementApiController] Uploading image: " + image.getOriginalFilename());
-                String original = image.getOriginalFilename();
-                String safeOriginal = (original == null) ? "upload" : original.replaceAll("[^a-zA-Z0-9._-]", "_");
-                String ext = "";
-                int i = safeOriginal.lastIndexOf('.');
-                if (i >= 0) ext = safeOriginal.substring(i);
-                String fileName = System.currentTimeMillis() + "_" + (i >= 0 ? safeOriginal.substring(0, i) : safeOriginal) + ext;
-
-                java.nio.file.Path target = Paths.get("uploads", "players", fileName).toAbsolutePath().normalize();
-                try {
-                    image.transferTo(target.toFile());
-                    System.out.println("[ManagementApiController] Image saved to: " + target);
-                } catch (IOException ioe) {
-                    ioe.printStackTrace();
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Failed to write uploaded file: " + ioe.getMessage());
-                }
-                // Save web-relative path relative to application root (uploads are served from filesystem root)
-                p.setImagePath("players/" + fileName);
+                // Use PlayerService to handle image upload to cloud (ImageKit) and saving file metadata
+                System.out.println("[ManagementApiController] Delegating image upload to PlayerService for: " + image.getOriginalFilename());
             }
 
-            Player saved = playerRepository.save(p);
+            // Delegate creation to PlayerService which uploads the image (if any) and persists the Player
+            Player saved = playerService.createPlayer(p, image);
             System.out.println("[ManagementApiController] Player saved with id=" + saved.getId());
-            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+            // Return OK so frontend knows cloud upload succeeded
+            return ResponseEntity.ok(saved);
 
         } catch (Exception e) {
-            e.printStackTrace();
             System.err.println("[ManagementApiController] ERROR creating player: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to create player: " + e.getMessage());
@@ -175,33 +157,45 @@ public class ManagementApiController {
     }
 
     @PostMapping(value = "/news", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> createNews(
-            @RequestPart("title") String title,
-            @RequestPart("content") String content,
-            @RequestPart(value = "image", required = false) MultipartFile image
-    ) {
-        System.out.println("[ManagementApiController] POST /news — title=" + title + ", hasImage=" + (image != null && !image.isEmpty()));
+    public ResponseEntity<?> createNews(@ModelAttribute NewsPost n,
+                                        @RequestPart(value = "image", required = false) MultipartFile image) {
+        System.out.println("[ManagementApiController] POST /news — title=" + n.getTitle() + ", hasImage=" + (image != null && !image.isEmpty()));
         try {
-            // Self-healing: ensure uploads/news directory exists
-            Files.createDirectories(Paths.get("uploads", "news"));
-            NewsPost n = new NewsPost();
-            n.setTitle(title);
-            n.setContent(content);
             n.setCreatedAt(LocalDateTime.now());
             if (image != null && !image.isEmpty()) {
-                System.out.println("[ManagementApiController] Uploading news image: " + image.getOriginalFilename());
-                String path = fileService.storeFile(image, "news");
-                n.setImagePath(path);
-                System.out.println("[ManagementApiController] News image stored at: " + path);
+                System.out.println("[ManagementApiController] Uploading news image to cloud: " + image.getOriginalFilename());
+                try {
+                    FileService.UploadResult ur = fileService.uploadToCloud(image, "news");
+                    if (ur != null) {
+                        n.setImagePath(ur.url);
+                        n.setImageFileId(ur.fileId);
+                        System.out.println("[ManagementApiController] News image uploaded to: " + ur.url + " fileId=" + ur.fileId);
+                    }
+                } catch (Exception e) {
+                    // Let service layer handle final fallback if needed; still continue to save here
+                    System.err.println("[ManagementApiController] Image upload failed (controller): " + e.getMessage());
+                }
             }
             NewsPost saved = newsRepository.save(n);
             System.out.println("[ManagementApiController] News saved with id=" + saved.getId());
-            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
-        } catch (IOException e) {
-            System.err.println("[ManagementApiController] File upload failed: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed: " + e.getMessage());
+            return ResponseEntity.ok(saved);
         } catch (Exception ex) {
             System.err.println("[ManagementApiController] ERROR creating news: " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create news: " + ex.getMessage());
+        }
+    }
+
+    @PostMapping(value = "/news", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> createNewsJson(@RequestBody NewsPost n) {
+        System.out.println("[ManagementApiController] POST /news (json) — title=" + n.getTitle());
+        try {
+            n.setCreatedAt(LocalDateTime.now());
+            // No image to upload when JSON is used
+            NewsPost saved = newsRepository.save(n);
+            System.out.println("[ManagementApiController] News saved with id=" + saved.getId());
+            return ResponseEntity.ok(saved);
+        } catch (Exception ex) {
+            System.err.println("[ManagementApiController] ERROR creating news (json): " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create news: " + ex.getMessage());
         }
     }
@@ -216,7 +210,12 @@ public class ManagementApiController {
         }
         NewsPost n = opt.get();
         try {
-            if (n.getImagePath() != null) fileService.deleteFile(n.getImagePath());
+            if (n.getImageFileId() != null && !n.getImageFileId().isBlank()) {
+                fileService.deleteRemoteByFileId(n.getImageFileId());
+            } else if (n.getImagePath() != null) {
+                // fallback: attempt local delete if the stored path is local
+                fileService.deleteFile(n.getImagePath());
+            }
             newsRepository.deleteById(id);
             System.out.println("[ManagementApiController] Deleted news id=" + id);
             return ResponseEntity.ok().build();
