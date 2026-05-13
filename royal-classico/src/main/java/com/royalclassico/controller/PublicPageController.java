@@ -12,6 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -32,8 +33,17 @@ public class PublicPageController {
     @GetMapping("/")
     public String home(Model model) {
         System.out.println("[PublicPageController] GET / (home)");
-        model.addAttribute("sliderPosts",  newsService.getSliderPosts());
-        model.addAttribute("latestPosts",  newsService.getLatestPosts());
+        // Slider (short selection) — defensively provide empty lists if service returns null
+        List<?> slider = newsService.getSliderPosts();
+        model.addAttribute("sliderPosts", slider != null ? slider : Collections.emptyList());
+
+        List<?> latest = newsService.getLatestPosts();
+        model.addAttribute("latestPosts", latest != null ? latest : Collections.emptyList());
+
+        // Provide a general newsList used by the index slider/template (never null)
+        List<?> newsList = newsService.getLatestPosts();
+        model.addAttribute("newsList", newsList != null ? newsList : Collections.emptyList());
+
         // Use the dedicated next_fixture collection for the banner (Dual-Sync pattern)
         model.addAttribute("nextMatch", fixtureService.getActiveNextFixture().orElse(null));
         return "index";
@@ -43,55 +53,71 @@ public class PublicPageController {
     @GetMapping("/squad")
     public String squad(Model model) {
         System.out.println("[PublicPageController] GET /squad");
-        List<Player> all = playerService.getAllPlayers();
-        model.addAttribute("allPlayers", all);
-        model.addAttribute("players", all);
+        try {
+            List<Player> all = playerService.getAllPlayers();
+            model.addAttribute("allPlayers", all);
+            model.addAttribute("players", all);
 
-        // Debug: log players and key fields to help trace missing photos/ages/numbers
-        log.info("Loaded {} players for squad page", all.size());
-        for (Player p : all) {
-            log.info("player id={} name='{}' age={} jerseyNumber={} imagePath='{}' positions={}",
-                    p.getId(), p.getName(), p.getAge(), p.getJerseyNumber(), p.getImagePath(), p.getPositions());
-        }
-
-        // Group players by primary position (first position in positions list) — null-safe
-        List<Player> gk = new ArrayList<>();
-        List<Player> def = new ArrayList<>();
-        List<Player> mid = new ArrayList<>();
-        List<Player> fwd = new ArrayList<>();
-        List<Player> other = new ArrayList<>();
-
-        for (Player p : all) {
-            if (p.getPositions() != null && !p.getPositions().isEmpty()) {
-                String first = p.getPositions().get(0);
-                if (first == null) { other.add(p); continue; }
-                switch (first.toUpperCase()) {
-                    case "GK": gk.add(p); break;
-                    case "DEF": def.add(p); break;
-                    case "MID": mid.add(p); break;
-                    case "FWD": fwd.add(p); break;
-                    default: other.add(p); break;
-                }
-            } else {
-                other.add(p);
+            // Debug: log players and key fields to help trace missing photos/ages/numbers
+            log.info("Loaded {} players for squad page", all.size());
+            for (Player p : all) {
+                log.info("player id={} name='{}' age={} jerseyNumber={} imagePath='{}' positions={}",
+                        p.getId(), p.getName(), p.getAge(), p.getJerseyNumber(), p.getImagePath(), p.getPositions());
             }
+
+            // Group players by primary position (first position in positions list) — null-safe
+            List<Player> gk = new ArrayList<>();
+            List<Player> def = new ArrayList<>();
+            List<Player> mid = new ArrayList<>();
+            List<Player> fwd = new ArrayList<>();
+            List<Player> other = new ArrayList<>();
+
+            for (Player p : all) {
+                if (p.getPositions() != null && !p.getPositions().isEmpty()) {
+                    String first = p.getPositions().get(0);
+                    if (first == null) { other.add(p); continue; }
+                    switch (first.toUpperCase()) {
+                        case "GK": gk.add(p); break;
+                        case "DEF": def.add(p); break;
+                        case "MID": mid.add(p); break;
+                        case "FWD": fwd.add(p); break;
+                        default: other.add(p); break;
+                    }
+                } else {
+                    other.add(p);
+                }
+            }
+
+            model.addAttribute("gkPlayers", gk);
+            model.addAttribute("defPlayers", def);
+            model.addAttribute("midPlayers", mid);
+            model.addAttribute("fwdPlayers", fwd);
+            model.addAttribute("otherPlayers", other);
+
+            model.addAttribute("nextMatch", fixtureService.getActiveNextFixture().orElse(null));
+            return "squad";
+        } catch (Exception e) {
+            log.error("Failed to render squad page", e);
+            model.addAttribute("errorMessage", "Unable to load squad page: " + e.getMessage());
+            // Provide empty collections so the template can render without nulls
+            model.addAttribute("allPlayers", Collections.emptyList());
+            model.addAttribute("players", Collections.emptyList());
+            model.addAttribute("gkPlayers", Collections.emptyList());
+            model.addAttribute("defPlayers", Collections.emptyList());
+            model.addAttribute("midPlayers", Collections.emptyList());
+            model.addAttribute("fwdPlayers", Collections.emptyList());
+            model.addAttribute("otherPlayers", Collections.emptyList());
+            model.addAttribute("nextMatch", fixtureService.getActiveNextFixture().orElse(null));
+            return "squad"; // render squad template with graceful error message
         }
-
-        model.addAttribute("gkPlayers", gk);
-        model.addAttribute("defPlayers", def);
-        model.addAttribute("midPlayers", mid);
-        model.addAttribute("fwdPlayers", fwd);
-        model.addAttribute("otherPlayers", other);
-
-        model.addAttribute("nextMatch", fixtureService.getActiveNextFixture().orElse(null));
-        return "squad";
     }
 
     /** Full news archive page */
     @GetMapping("/news")
     public String news(Model model) {
         System.out.println("[PublicPageController] GET /news");
-        model.addAttribute("newsPosts", newsService.getLatestPosts());
+        List<?> latest = newsService.getLatestPosts();
+        model.addAttribute("newsPosts", latest != null ? latest : Collections.emptyList());
         model.addAttribute("nextMatch", fixtureService.getActiveNextFixture().orElse(null));
         return "news";
     }

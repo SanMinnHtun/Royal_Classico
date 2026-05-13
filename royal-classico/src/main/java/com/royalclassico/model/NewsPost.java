@@ -29,6 +29,9 @@ public class NewsPost {
     /** Relative path under /uploads/, e.g. "news/image.jpg" */
     private String imagePath;
 
+    /** ImageKit file identifier for remote deletion */
+    private String imageFileId;
+
     /** Auto-set on creation */
     private LocalDateTime createdAt;
 

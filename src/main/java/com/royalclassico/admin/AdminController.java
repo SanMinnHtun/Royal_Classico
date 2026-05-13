@@ -1,5 +1,16 @@
 package com.royalclassico.admin;
 
+import com.royalclassico.model.Player;
+import com.royalclassico.model.News;
+import com.royalclassico.repository.PlayerRepository;
+import com.royalclassico.repository.NewsRepository;
+import io.imagekit.client.ImageKitClient;
+import io.imagekit.client.ImageKitClientImpl;
+import io.imagekit.core.ClientOptions;
+import io.imagekit.models.files.FileUploadParams;
+import io.imagekit.models.files.FileUploadResponse;
+import java.io.ByteArrayInputStream;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -8,20 +19,35 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Optional;
 
-// ...existing imports...
-
 @RestController
 @RequestMapping("/api/v1/management-internal")
 public class AdminController {
 
     @Autowired
-    private PlayerRepository playerRepository; // assume exists
+    private PlayerRepository playerRepository;
 
     @Autowired
-    private NewsRepository newsRepository; // assume exists
+    private NewsRepository newsRepository;
 
-    @Autowired
-    private com.royalclassico.service.FileService fileService; // implement deleteFile(path) to remove files from uploads
+    // Helper method to handle Cloud Upload using installed ImageKit client (v3.x)
+    private String uploadToImageKit(MultipartFile file, String folder) throws Exception {
+        ClientOptions options = ClientOptions.fromEnv();
+        ImageKitClient ik = new ImageKitClientImpl(options);
+
+        byte[] bytes = file.getBytes();
+        String filename = UUID.randomUUID().toString() + "-" + (file.getOriginalFilename() == null ? "upload" : file.getOriginalFilename());
+
+        FileUploadParams.Body body = FileUploadParams.Body.builder()
+                .file(new ByteArrayInputStream(bytes))
+                .fileName(filename)
+                .useUniqueFileName(true)
+                .folder(folder)
+                .build();
+
+        FileUploadParams params = FileUploadParams.builder().body(body).build();
+        FileUploadResponse response = ik.files().upload(params);
+        return response.url().orElse(null);
+    }
 
     /* ---------------- Players ---------------- */
 
@@ -44,27 +70,28 @@ public class AdminController {
         try {
             String photoPath = null;
             if (image != null && !image.isEmpty()) {
-                photoPath = fileService.storeFile(image, "players");
+                // Now uploading to ImageKit cloud instead of local disk
+                photoPath = uploadToImageKit(image, "players");
             }
             Player p = new Player();
             p.setRealName(name);
             p.setJerseyName(jerseyName);
             p.setAge(age);
             p.setJerseyNumber(number);
-            // positionsJson is expected to be a JSON array string like ["GK","DEF"]
+
             if (positionsJson != null && !positionsJson.isBlank()) {
-                // simplistic parsing — remove brackets and quotes
                 String trimmed = positionsJson.trim();
                 trimmed = trimmed.replaceAll("\\[|\\]|\\\"", "");
-                List<String> positions = List.of(trimmed.split("\",?\s*"));
+                List<String> positions = List.of(trimmed.split("\",?\\s*"));
                 p.setPositions(positions);
             }
-            p.setImagePath(photoPath);
+
+            p.setImagePath(photoPath); // Saves the URL (https://ik.imagekit.io/...)
             playerRepository.save(p);
             return ResponseEntity.ok(p);
         } catch (Exception ex) {
             ex.printStackTrace();
-            return ResponseEntity.status(500).body("Failed to create player");
+            return ResponseEntity.status(500).body("Failed to create player: " + ex.getMessage());
         }
     }
 
@@ -72,12 +99,9 @@ public class AdminController {
     public ResponseEntity<?> deletePlayer(@PathVariable("id") String id) {
         Optional<Player> opt = playerRepository.findById(id);
         if (opt.isEmpty()) return ResponseEntity.notFound().build();
-        Player p = opt.get();
+
         try {
-            // IMPORTANT: delete file first from disk, then remove DB record
-            if (p.getImagePath() != null) {
-                fileService.deleteFile(p.getImagePath());
-            }
+            // Note: Cloud deletion logic can be added here later
             playerRepository.deleteById(id);
             return ResponseEntity.ok().build();
         } catch (Exception ex) {
@@ -104,7 +128,7 @@ public class AdminController {
         try {
             String imagePath = null;
             if (image != null && !image.isEmpty()) {
-                imagePath = fileService.storeFile(image, "news");
+                imagePath = uploadToImageKit(image, "news");
             }
             News n = new News();
             n.setTitle(title);
@@ -122,11 +146,8 @@ public class AdminController {
     public ResponseEntity<?> deleteNews(@PathVariable("id") String id) {
         Optional<News> opt = newsRepository.findById(id);
         if (opt.isEmpty()) return ResponseEntity.notFound().build();
-        News n = opt.get();
+
         try {
-            if (n.getImagePath() != null) {
-                fileService.deleteFile(n.getImagePath());
-            }
             newsRepository.deleteById(id);
             return ResponseEntity.ok().build();
         } catch (Exception ex) {
@@ -135,7 +156,7 @@ public class AdminController {
         }
     }
 
-    // DTOs and helper classes
+    // DTOs
     static class PlayerDto {
         public String id; public String realName; public String jerseyName; public Integer age; public Integer jerseyNumber; public List<String> positions; public String imagePath;
         static PlayerDto from(Player p) {
@@ -162,18 +183,4 @@ public class AdminController {
             return d;
         }
     }
-
-    // ...existing code...
 }
-
-/*
-Notes:
-- FileService should expose:
-    String storeFile(MultipartFile file); // saves under uploads/... and returns relative path (e.g. players/abc.jpg)
-    void deleteFile(String relativePath);  // physically deletes the file from the uploads directory
-
-- For production, centralize header verification by implementing a Spring HandlerInterceptor that checks
-  the X-Admin-Secret header for all /api/v1/management-internal/** routes and register it.
-
-- Player, News entities and repositories assumed to exist. Adjust DTO mapping to match actual field names.
-*/

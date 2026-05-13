@@ -2,10 +2,13 @@ package com.royalclassico.controller;
 
 import com.royalclassico.model.Fixture;
 import com.royalclassico.service.FixtureService;
+import com.royalclassico.service.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +24,7 @@ import java.util.List;
 public class AdminFixtureController {
 
     private final FixtureService fixtureService;
+    private final FileService fileService;
 
     /**
      * GET /banner — returns the next upcoming fixture (ignores finished matches)
@@ -64,23 +68,16 @@ public class AdminFixtureController {
     }
 
     /**
-     * POST / — create a new fixture. Ensure ID is null so MongoDB generates a new one.
+     * POST / — create a new fixture. Accepts multipart form (optional image).
      */
-    @PostMapping(consumes = "application/json")
-    public ResponseEntity<Fixture> createFixture(@RequestBody Fixture fixture) {
-        System.out.println("[AdminFixtureController] POST /fixture — create");
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Fixture> createFixture(@ModelAttribute Fixture fixture,
+                                                 @RequestPart(value = "image", required = false) MultipartFile image) {
+        System.out.println("[AdminFixtureController] POST /fixture — create (model attribute)");
         try {
-            // Build a new Fixture instance to avoid any client-provided id or accidental overwrite
-            Fixture toSave = new Fixture();
-            toSave.setId(null);
-            toSave.setRivalTeam(fixture.getRivalTeam());
-            toSave.setDate(fixture.getDate());
-            toSave.setTime(fixture.getTime());
-            toSave.setStadium(fixture.getStadium());
-            toSave.setResult(fixture.getResult() != null ? fixture.getResult() : "vs");
-            toSave.setFinished(fixture.isFinished());
-            toSave.setGoalScorers(fixture.getGoalScorers());
-            Fixture saved = fixtureService.saveAndSyncNext(toSave);
+            // Ensure new document is created
+            fixture.setId(null);
+            Fixture saved = fixtureService.createFixtureWithImage(fixture, image);
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
         } catch (Exception e) {
             System.err.println("[AdminFixtureController] ERROR create: " + e.getMessage());
@@ -91,8 +88,8 @@ public class AdminFixtureController {
     /**
      * PUT / — update an existing fixture. Requires fixture.id to be present.
      */
-    @PutMapping(consumes = "application/json")
-    public ResponseEntity<Fixture> updateFixture(@RequestBody Fixture fixture) {
+    @PutMapping(consumes = {"application/x-www-form-urlencoded", "multipart/form-data"})
+    public ResponseEntity<Fixture> updateFixture(@ModelAttribute Fixture fixture) {
         System.out.println("[AdminFixtureController] PUT /fixture — update id=" + fixture.getId());
         if (fixture.getId() == null || fixture.getId().isBlank()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();

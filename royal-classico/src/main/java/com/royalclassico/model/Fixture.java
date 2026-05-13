@@ -38,4 +38,10 @@ public class Fixture {
 
     /** Optional: goal scorer names and times */
     private String goalScorers;
+
+    /** Optional image for the fixture (cloud URL when uploaded) */
+    private String imagePath;
+
+    /** ImageKit file identifier (remote) — used for deletion from the cloud */
+    private String imageFileId;
 }

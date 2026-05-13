@@ -19,7 +19,7 @@ import java.util.*;
 public class NewsService {
 
     private final NewsPostRepository newsPostRepository;
-    private final FileStorageService fileStorageService;
+    private final FileService fileService;
 
     // ── Read ────────────────────────────────────────────────────────────────
 
@@ -58,8 +58,25 @@ public class NewsService {
     public NewsPost createPost(NewsPost post, MultipartFile imageFile) throws IOException {
         post.initCreatedAt();
         if (imageFile != null && !imageFile.isEmpty()) {
-            String path = fileStorageService.saveFile(imageFile, "news");
-            post.setImagePath(path);
+            try {
+                FileService.UploadResult ur = fileService.uploadToCloud(imageFile, "news");
+                if (ur != null && ur.url != null && !ur.url.isBlank()) {
+                    post.setImagePath(ur.url);
+                } else {
+                    log.warn("ImageKit upload returned null/empty URL for news image; using placeholder");
+                    post.setImagePath("/images/default-logo.png");
+                    // Force save immediately to ensure persistence even if upload failed
+                    return newsPostRepository.save(post);
+                }
+                if (ur != null && ur.fileId != null && !ur.fileId.isBlank()) {
+                    post.setImageFileId(ur.fileId);
+                }
+            } catch (Exception e) {
+                log.error("Failed to upload news image to ImageKit; saving post with placeholder image", e);
+                post.setImagePath("/images/default-logo.png");
+                // Critical: force-save to Atlas even if upload failed
+                return newsPostRepository.save(post);
+            }
         }
         return newsPostRepository.save(post);
     }
@@ -71,11 +88,26 @@ public class NewsService {
         existing.setTitle(updatedData.getTitle());
         existing.setContent(updatedData.getContent());
 
-        // Handle image replacement — delete old file first
+        // Handle image replacement — upload new file to ImageKit and store public URL
         if (imageFile != null && !imageFile.isEmpty()) {
-            fileStorageService.deleteFile(existing.getImagePath()); // strict cleanup
-            String newPath = fileStorageService.saveFile(imageFile, "news");
-            existing.setImagePath(newPath);
+            try {
+                FileService.UploadResult ur = fileService.uploadToCloud(imageFile, "news");
+                if (ur != null && ur.url != null && !ur.url.isBlank()) {
+                    existing.setImagePath(ur.url);
+                } else {
+                    log.warn("ImageKit upload returned empty URL for updated news; using placeholder and saving immediately");
+                    existing.setImagePath("/images/default-logo.png");
+                    return newsPostRepository.save(existing);
+                }
+                if (ur != null && ur.fileId != null && !ur.fileId.isBlank()) {
+                    existing.setImageFileId(ur.fileId);
+                }
+            } catch (Exception e) {
+                log.error("Failed to upload updated news image to ImageKit; saving existing post with placeholder", e);
+                existing.setImagePath("/images/default-logo.png");
+                // Force-save updated post to ensure persistence
+                return newsPostRepository.save(existing);
+            }
         }
 
         return newsPostRepository.save(existing);
@@ -84,7 +116,16 @@ public class NewsService {
     public void deletePost(String id) {
         NewsPost post = newsPostRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("NewsPost not found: " + id));
-        fileStorageService.deleteFile(post.getImagePath()); // strict cleanup
+
+        // If we have a remote ImageKit fileId, attempt to delete it from ImageKit first
+        if (post.getImageFileId() != null && !post.getImageFileId().isBlank()) {
+            try {
+                fileService.deleteRemoteByFileId(post.getImageFileId());
+            } catch (Exception nm) {
+                log.warn("ImageKit delete call failed for fileId={} postId={}: {}", post.getImageFileId(), id, nm.getMessage());
+            }
+        }
+
         newsPostRepository.deleteById(id);
         log.info("Deleted news post id={}", id);
     }
