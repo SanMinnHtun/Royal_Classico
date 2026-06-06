@@ -179,7 +179,7 @@ The admin dashboard is intentionally obscured for security.
 
     Open your browser's developer console (F12 or Cmd+Option+I) and paste the following JavaScript code:
 
-    ```javascript
+   *** ```javascript
     localStorage.setItem('admin_secret_token', 'RC-ADMIN-XKDF92-CLASSIFIED');
     location.reload();
     ```
