@@ -34,7 +34,7 @@ This project provides a comprehensive web platform for the Royal Classico Footba
 - **Stars:** 1
 - **Forks:** 0
 
-## Key Features & Benefits
+### Key Features & Benefits
 
 *   **Public-Facing Website:** Displays club news, with an auto-rotating news slider and manual navigation.
 *   **Hidden Admin Dashboard:** A robust management interface, secured by a PIN entry and a client-side secret token, ensuring administrative control is not publicly discoverable.
