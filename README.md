@@ -2,7 +2,7 @@
 
 ### Welcome to the `Royal_Classico` repository! This project is a web application designed for the administration and management of a football club, "Royal Classico FC". It features a public-facing interface for news and updates, alongside a hidden administrative dashboard for managing various aspects of the club.
 
-### Table of Contents
+## Table of Contents
 
 - [Project Title & Description](#project-title--description)
 - [Key Features & Benefits](#key-features--benefits)
