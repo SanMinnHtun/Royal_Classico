@@ -208,9 +208,6 @@ We welcome contributions to the Royal Classico FC Management System! If you're i
 7.  **Push your branch** to your forked repository.
 8.  **Open a Pull Request** against the `main` branch of the original repository. Provide a detailed description of your changes.
 
-## License Information
-
-This project currently has **no specified license**.
 
 It is highly recommended to add a license (e.g., MIT, Apache 2.0, GPL) to clarify usage, distribution, and modification terms for others.
 
