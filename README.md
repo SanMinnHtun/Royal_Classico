@@ -29,10 +29,8 @@
 
 This project provides a comprehensive web platform for the Royal Classico Football Club. It includes a user-friendly frontend to showcase club news and updates, and a secure, "security through obscurity" backend administration system. The admin dashboard allows for the management of players, news articles, and fixtures, with file upload capabilities for various media assets.
 
-- **Repository:** [https://github.com/SanMinnHtun/Royal_Classico](https://github.com/SanMinnHtun/Royal_Classico)
+
 - **Owner:** SanMinnHtun
-- **Stars:** 1
-- **Forks:** 0
 
 ### Key Features & Benefits
 
