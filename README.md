@@ -187,7 +187,6 @@ The admin dashboard is intentionally obscured for security.
     localStorage.removeItem('admin_secret_token');
     location.reload();
     ```
-
 ## Configuration Options
 
 *   **Application Port**: The application runs on port `8080` by default, as configured in the `Dockerfile` and typical Spring Boot applications. This can be changed in `application.properties` (if present) or via environment variables.
