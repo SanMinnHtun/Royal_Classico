@@ -42,7 +42,7 @@ This project provides a comprehensive web platform for the Royal Classico Footba
 
 ## Technologies Used
 
-### Languages
+## Languages
 
 *   **Java**: For the backend logic, server-side processing, and API development.
 *   **JavaScript**: For dynamic frontend interactions, including the news slider and admin client SDK.
