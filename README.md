@@ -213,4 +213,5 @@ It is highly recommended to add a license (e.g., MIT, Apache 2.0, GPL) to clarif
 ## Acknowledgments
 
 *   **Eclipse Temurin**: For providing the base JDK image used in the `Dockerfile`.
+*   *   **Google Fonts**: For the `Inter`, `Roboto`, and `Bebas Neue` typefaces used in the frontend styling.
 
