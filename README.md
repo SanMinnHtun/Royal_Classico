@@ -21,7 +21,7 @@
 - [License Information](#license-information)
 - [Acknowledgments](#acknowledgments)
 
----
+----
 
 ## Project Title & Description
 
